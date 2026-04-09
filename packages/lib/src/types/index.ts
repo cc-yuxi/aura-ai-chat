@@ -447,11 +447,8 @@ export interface AuraAgentConfig {
   toolTimeout?: number;
   confirmationTimeoutMs?: number;
   enableWebMcp?: boolean;
+  providers?: ProviderConfig[];
 }
-
-export type AgentConfig = AuraAgentConfig & {
-  providerConfigs?: ProviderConfig[];
-};
 
 export interface AuraIdentityConfig {
   appMetadata: AppMetadata;
@@ -513,11 +510,7 @@ export interface SettingsModalConfig {
 export interface AuraConfig {
   identity: AuraIdentityConfig;
   appearance?: AuraAppearanceConfig;
-  providers?: ProviderConfig[];
   agent?: AuraAgentConfig;
-  history?: {
-    manager?: IConversationManager;
-  };
   onAuraEvent?: (event: AuraEvent) => void;
   settingsModalConfig?: SettingsModalConfig;
 }

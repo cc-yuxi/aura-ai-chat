@@ -130,7 +130,7 @@ export class AuraChat extends LitElement {
         !this.orchestrator ||
         !prevConfig ||
         prevConfig.agent?.conversationManager !==
-          this.config.agent?.conversationManager ||
+        this.config.agent?.conversationManager ||
         prevConfig.agent?.conversationId !== this.config.agent?.conversationId;
       if (needsInit) {
         await this.initManager();
@@ -163,7 +163,7 @@ export class AuraChat extends LitElement {
   private async initManager(): Promise<void> {
     this.eventBus = new EventBus(this, this.config.onAuraEvent);
     this.historyManager = new HistoryManager(this.config, this.eventBus);
-    this.providerManager = new ProviderManager(this.config?.providers);
+    this.providerManager = new ProviderManager(this.config?.agent?.providers);
     const skillManager = new SkillRegistry();
     if (this.config.agent?.skills) {
       skillManager.registerSkills(this.config.agent.skills);
@@ -335,13 +335,13 @@ export class AuraChat extends LitElement {
           <span class="header__icon" part="header-icon">
             <md-icon
               >${cfg?.appearance?.headerIcon ??
-              this.activeProviderIcon}</md-icon
+      this.activeProviderIcon}</md-icon
             >
           </span>
           <span class="header__title" part="header-title">
             ${cfg?.appearance?.headerTitle ??
-            cfg?.identity?.aiName ??
-            "AI Assistant"}
+      cfg?.identity?.aiName ??
+      "AI Assistant"}
           </span>
         </div>
         <div class="header__actions">
@@ -407,21 +407,21 @@ export class AuraChat extends LitElement {
         part="transcript"
       >
         ${this.isCopilotChecking
-          ? this.renderTypingIndicator("Logging in...")
-          : nothing}
+        ? this.renderTypingIndicator("Logging in...")
+        : nothing}
         ${this.needsCopilotLogin ? this.renderCopilotLogin() : nothing}
         ${showEmpty && !this.needsCopilotLogin && !this.isCopilotChecking
-          ? this.renderEmptyState()
-          : nothing}
+        ? this.renderEmptyState()
+        : nothing}
         ${!this.needsCopilotLogin && !this.isCopilotChecking
-          ? this.renderTimelineItems()
-          : nothing}
+        ? this.renderTimelineItems()
+        : nothing}
         ${!this.needsCopilotLogin &&
         !this.isCopilotChecking &&
         this.messages.length > 0 &&
         (this.status === "loading" || this.status === "streaming")
-          ? this.renderTypingIndicator(loadingMessage)
-          : nothing}
+        ? this.renderTypingIndicator(loadingMessage)
+        : nothing}
       </div>
     `;
   }
@@ -450,10 +450,10 @@ export class AuraChat extends LitElement {
             .aiIcon=${this.activeProviderIcon}
             .aiName=${this.config?.identity?.aiName ?? "AI Assistant"}
             .agentSteps=${m.metadata && m.metadata["isIteration"]
-              ? (m.metadata["agentSteps"] as AgentStep[]).filter(
-                  (s) => s.iteration === m.metadata?.["iterationNumber"],
-                )
-              : undefined}
+            ? (m.metadata["agentSteps"] as AgentStep[]).filter(
+              (s) => s.iteration === m.metadata?.["iterationNumber"],
+            )
+            : undefined}
             @approve-action=${this.handleStepApproved}
             @reject-action=${this.handleStepRejected}
             @user-input-submitted=${this.handleUserInputSubmitted}
@@ -470,14 +470,14 @@ export class AuraChat extends LitElement {
     return html`
       <aura-input
         .placeholder=${cfg?.appearance?.inputPlaceholder ??
-        "Ask AI to help with your request..."}
+      "Ask AI to help with your request..."}
         .disabled=${this.needsCopilotLogin}
         .loading=${isLoading}
         .enableAttachments=${!!this.config?.appearance?.enableAttachments}
         .maxAttachmentSize=${this.config?.appearance?.maxAttachmentSize ??
-        10_485_760}
+      10_485_760}
         .allowedAttachmentTypes=${this.config?.appearance
-          ?.allowedAttachmentTypes ?? []}
+        ?.allowedAttachmentTypes ?? []}
         .providerManager=${this.providerManager}
         .appId=${this.config?.identity?.appMetadata?.appId ?? "default"}
         .suggestedPrompts=${this.config?.appearance?.suggestedPrompts ?? []}
@@ -619,7 +619,7 @@ export class AuraChat extends LitElement {
         </h3>
         <p class="empty-state__desc">
           ${welcome ??
-          "Ask me to create charts, add datasets, configure filters, or modify your dashboard."}
+      "Ask me to create charts, add datasets, configure filters, or modify your dashboard."}
         </p>
         <suggested-prompts
           .prompts=${prompts}
@@ -647,10 +647,10 @@ export class AuraChat extends LitElement {
               >${this.config?.identity?.aiName ?? "AI Assistant"}</span
             >
             ${label
-              ? html`<span class="typing-label" part="typing-label"
+        ? html`<span class="typing-label" part="typing-label"
                   >${label}</span
                 >`
-              : nothing}
+        : nothing}
           </div>
           <div class="typing-body">
             <div class="typing-dots">
@@ -785,11 +785,11 @@ export class AuraChat extends LitElement {
   private get settingsConfigEl() {
     return this.shadowRoot?.getElementById("settingsConfig") as
       | (HTMLElement & {
-          getValues(): unknown;
-          expandAll(): void;
-          collapseAll(): void;
-          isAllReadonly: boolean;
-        })
+        getValues(): unknown;
+        expandAll(): void;
+        collapseAll(): void;
+        isAllReadonly: boolean;
+      })
       | null;
   }
 
@@ -820,12 +820,12 @@ export class AuraChat extends LitElement {
       <div
         class="settings-overlay"
         @click=${(e: Event) => {
-          if (
-            (e.target as HTMLElement).classList.contains("settings-overlay")
-          ) {
-            this.handleCloseSettings();
-          }
-        }}
+        if (
+          (e.target as HTMLElement).classList.contains("settings-overlay")
+        ) {
+          this.handleCloseSettings();
+        }
+      }}
       >
         <div class="settings-modal">
           <div class="settings-modal__header">
@@ -867,7 +867,7 @@ export class AuraChat extends LitElement {
                 class="btn-apply"
                 @click=${this.handleSettingsApplyFromFooter}
                 ?disabled=${this.config?.settingsModalConfig?.readonly &&
-                !this.config.settingsModalConfig.editableFields?.length}
+      !this.config.settingsModalConfig.editableFields?.length}
               >
                 Apply
               </button>

@@ -113,7 +113,7 @@ export class AuraSettings extends LitElement {
   private builtInProviderCfg(
     providerId: string,
   ): Record<string, unknown> | undefined {
-    const pc = this.config?.providers?.find(
+    const pc = this.config?.agent?.providers?.find(
       (p) => p.type === "built-in" && p.id === providerId,
     );
     return pc?.config as Record<string, unknown> | undefined;
@@ -236,15 +236,6 @@ export class AuraSettings extends LitElement {
         errorMessage: this.val("cfg-errorMessage") || undefined,
         retryLabel: this.val("cfg-retryLabel") || undefined,
       },
-      providers: [
-        {
-          type: "built-in",
-          id: "gitHubCopilot",
-          config: {
-            rememberToken: this.chk("cfg-copilotRemember"),
-          },
-        },
-      ] satisfies ProviderConfig[],
       agent: {
         enableStreaming: this.chk("cfg-enableStreaming"),
         appSystemPrompt: this.val("cfg-systemPrompt"),
@@ -258,6 +249,15 @@ export class AuraSettings extends LitElement {
         showThinkingProcess: this.chk("cfg-showThinkingProcess"),
         toolTimeout: parseInt(this.val("cfg-toolTimeout"), 10) || undefined,
         enableWebMcp: this.chk("cfg-enableWebMcp"),
+        providers: [
+          {
+            type: "built-in",
+            id: "gitHubCopilot",
+            config: {
+              rememberToken: this.chk("cfg-copilotRemember"),
+            },
+          },
+        ] satisfies ProviderConfig[],
       },
     };
   }
@@ -384,12 +384,12 @@ export class AuraSettings extends LitElement {
         </span>
         <span class="tool-item__badges">
           ${needsConfirmation(tool)
-            ? html` <span class="tool-badge tool-badge--confirm"
+        ? html` <span class="tool-badge tool-badge--confirm"
                 >ask confirm<span class="info-tooltip"
                   >Requires user confirmation before executing</span
                 ></span
               >`
-            : nothing}
+        : nothing}
         </span>
       </div>
     `;
@@ -408,13 +408,13 @@ export class AuraSettings extends LitElement {
               <label>Skills</label>
             </div>
             ${this._skills.map((skill) => {
-              const skillTools = skill.tools
-                .map((id) => this._tools.find((t) => t.name === id))
-                .filter(Boolean) as AuraTool[];
-              const allEnabled = skill.tools.every((id) =>
-                this.enabledToolList.has(id),
-              );
-              return html`
+          const skillTools = skill.tools
+            .map((id) => this._tools.find((t) => t.name === id))
+            .filter(Boolean) as AuraTool[];
+          const allEnabled = skill.tools.every((id) =>
+            this.enabledToolList.has(id),
+          );
+          return html`
                 <div class="skill-group">
                   <div class="skill-group__header">
                     <input
@@ -433,7 +433,7 @@ export class AuraSettings extends LitElement {
                   </div>
                   <div class="skill-group__tools">
                     ${skillTools.map(
-                      (t) => html`
+            (t) => html`
                         <div class="skill-group__tool-name">
                           <span class="name-with-info">
                             <span>${t.name}</span>
@@ -445,22 +445,22 @@ export class AuraSettings extends LitElement {
                           </span>
                           <span class="tool-item__badges">
                             ${needsConfirmation(t)
-                              ? html`<span
+                ? html`<span
                                   class="tool-badge tool-badge--confirm"
                                   >ask confirm<span class="info-tooltip"
                                     >Requires user confirmation before
                                     executing</span
                                   ></span
                                 >`
-                              : nothing}
+                : nothing}
                           </span>
                         </div>
                       `,
-                    )}
+          )}
                   </div>
                 </div>
               `;
-            })}
+        })}
           `
         : nothing}
       <!-- Tools -->
@@ -478,8 +478,8 @@ export class AuraSettings extends LitElement {
             <div class="skill-group">
               <div class="skill-group__tools">
                 ${this._tools.map((t) =>
-                  this.renderToolItem(t, this.isToolLockedBySkill(t.name)),
-                )}
+          this.renderToolItem(t, this.isToolLockedBySkill(t.name)),
+        )}
               </div>
             </div>
           `
@@ -667,20 +667,20 @@ export class AuraSettings extends LitElement {
               >
                 <span
                   >${AuraSettings.THEME_OPTIONS.find(
-                    (t) => t.id === this._theme,
-                  )?.label ?? "Light"}</span
+      (t) => t.id === this._theme,
+    )?.label ?? "Light"}</span
                 >
                 <md-icon class="chevron"
                   >${this._themeDropdownOpen
-                    ? "expand_less"
-                    : "expand_more"}</md-icon
+        ? "expand_less"
+        : "expand_more"}</md-icon
                 >
               </button>
               ${this._themeDropdownOpen
-                ? html`
+        ? html`
                     <div class="theme-selector-menu" role="listbox">
                       ${AuraSettings.THEME_OPTIONS.map(
-                        (t) => html`
+          (t) => html`
                           <button
                             class="theme-selector-menu__item"
                             role="option"
@@ -690,10 +690,10 @@ export class AuraSettings extends LitElement {
                             ${t.label}
                           </button>
                         `,
-                      )}
+        )}
                     </div>
                   `
-                : nothing}
+        : nothing}
             </span>
           </div>
           <div class="field">
@@ -807,7 +807,7 @@ export class AuraSettings extends LitElement {
       <details
         class="section"
         @toggle=${(e: Event) =>
-          this.handleSectionToggle("agenticIntelligence", e)}
+        this.handleSectionToggle("agenticIntelligence", e)}
       >
         <summary>
           Agentic Intelligence ${this.sectionIcons("agenticIntelligence")}

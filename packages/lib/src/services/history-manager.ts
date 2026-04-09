@@ -27,7 +27,7 @@ export class HistoryManager {
     config: AuraConfig,
     private eventBus: EventBus | undefined,
   ) {
-    this.conversationManager = config.agent?.conversationManager ?? config.history?.manager;
+    this.conversationManager = config.agent?.conversationManager;
   }
 
   getCurrentConversation(): Conversation | null {

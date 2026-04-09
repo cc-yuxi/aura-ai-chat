@@ -6,7 +6,6 @@ export type {
   AuraIdentityConfig,
   AuraAppearanceConfig,
   AuraAgentConfig,
-  AgentConfig,
   AppMetadata,
   AIProvider,
   ProviderConfig,
