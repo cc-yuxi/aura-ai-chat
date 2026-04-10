@@ -334,16 +334,29 @@
   position: fixed;
   background: #1f2937;
   color: #fff;
-  padding: 8px 12px;
-  border-radius: 6px;
+  padding: 12px;
+  border-radius: 8px;
   font-size: 11px;
   z-index: 2000;
-  max-width: 250px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  pointer-events: none;
+  max-width: 320px;
+  max-height: 400px;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  pointer-events: auto;
   font-family: sans-serif;
   font-weight: normal;
-  line-height: 1.4;
+  line-height: 1.5;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.2) transparent;
+}
+
+.info-tooltip::-webkit-scrollbar {
+  width: 4px;
+}
+
+.info-tooltip::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.2);
+  border-radius: 2px;
 }
 
 .tool-item__badges {

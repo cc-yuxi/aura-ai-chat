@@ -21,6 +21,8 @@ export interface ProviderOptions extends Record<string, unknown> {
   endpoint?: string;
   apiKey?: string;
   authToken?: string | (() => Promise<string>);
+  includedModels?: string[];
+  excludedModels?: string[];
   signal?: AbortSignal;
 }
 

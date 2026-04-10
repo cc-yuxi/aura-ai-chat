@@ -127,7 +127,7 @@ export class AuraInput extends LitElement {
     const savedProviderId = loadUserSelectedProvider(this.appId);
     this.providerManager.switchProvider(
       savedProviderId ??
-        (this.providers.length > 0 ? this.providers[0].id : ""),
+      (this.providers.length > 0 ? this.providers[0].id : ""),
     );
     this.dispatchEvent(
       new CustomEvent("provider-selected", {
@@ -145,6 +145,40 @@ export class AuraInput extends LitElement {
     await this._loadModels();
   }
 
+  private _applyModelFilters(models: ModelInfo[], provider: AIProvider): ModelInfo[] {
+    const { includedModels, excludedModels } = provider.getConfig();
+    let filteredModels = [...models];
+
+    if (includedModels && includedModels.length > 0) {
+      filteredModels = filteredModels.filter((m) =>
+        includedModels.some((p) => {
+          try {
+            return new RegExp(p, "i").test(m.id);
+          } catch {
+            console.warn(`[aura-ai-chat] Invalid regex in includedModels: ${p}`);
+            return false;
+          }
+        }),
+      );
+    }
+
+    if (excludedModels && excludedModels.length > 0) {
+      filteredModels = filteredModels.filter(
+        (m) =>
+          !excludedModels.some((p) => {
+            try {
+              return new RegExp(p, "i").test(m.id);
+            } catch {
+              console.warn(`[aura-ai-chat] Invalid regex in excludedModels: ${p}`);
+              return false;
+            }
+          }),
+      );
+    }
+
+    return filteredModels;
+  }
+
   private async _loadModels(): Promise<void> {
     if (!this.providerManager) return;
     this.modelsLoading = true;
@@ -152,14 +186,14 @@ export class AuraInput extends LitElement {
     try {
       const activeProvider = this.providerManager.getActiveProvider();
       if (activeProvider) {
-        const models = await activeProvider.listModels();
-        this.availableModels = models;
+        const rawModels = await activeProvider.listModels();
+        this.availableModels = this._applyModelFilters(rawModels, activeProvider);
         let activeModel = this.providerManager.getActiveModel();
         if (
           !activeModel ||
           !this.availableModels.some((m) => m.id === activeModel)
         ) {
-          activeModel = models.length > 0 ? models[0].id : "";
+          activeModel = this.availableModels.length > 0 ? this.availableModels[0].id : "";
         }
         this._selectModel(activeModel);
       }
@@ -195,19 +229,19 @@ export class AuraInput extends LitElement {
           <div class="bottom-row_left">
             ${this._renderProviderDropdown()} ${this._renderModelDropdown()}
             ${this.enableAttachments
-              ? html`<file-attachment
+        ? html`<file-attachment
                   .attachments=${this.pendingAttachments}
                   .maxSize=${this.maxAttachmentSize}
                   .allowedTypes=${this.allowedAttachmentTypes}
                   .disabled=${this.loading}
                   @attachments-changed=${this._handleAttachmentsChanged}
                 ></file-attachment>`
-              : nothing}
+        : nothing}
           </div>
           <div class="bottom-row_right">
             ${this._renderIdeaButton()}
             ${this.loading
-              ? html` <button
+        ? html` <button
                   class="send-btn stop-btn"
                   part="stop-button"
                   aria-label="Stop generating"
@@ -216,7 +250,7 @@ export class AuraInput extends LitElement {
                 >
                   <md-icon>stop</md-icon>
                 </button>`
-              : html` <button
+        : html` <button
                   class="send-btn"
                   part="send-button"
                   aria-label="Send message"
@@ -248,7 +282,7 @@ export class AuraInput extends LitElement {
           <md-icon>lightbulb</md-icon>
         </button>
         ${this.showPromptsPopup
-          ? html`
+        ? html`
               <div
                 class="prompts-popup"
                 part="prompts-popup"
@@ -262,7 +296,7 @@ export class AuraInput extends LitElement {
                 ></suggested-prompts>
               </div>
             `
-          : nothing}
+        : nothing}
       </div>
     `;
   }
@@ -317,7 +351,7 @@ export class AuraInput extends LitElement {
           aria-expanded=${isOpen}
           ?disabled=${isDisabled}
           @click=${(e: MouseEvent) =>
-            !isDisabled && this._toggleDropdown("provider", e)}
+        !isDisabled && this._toggleDropdown("provider", e)}
         >
           <md-icon>${icon}</md-icon>
           <span>${this.selectedProvider?.label ?? "Provider"}</span>
@@ -326,14 +360,14 @@ export class AuraInput extends LitElement {
           >
         </button>
         ${isOpen
-          ? html`
+        ? html`
               <div
                 class="selector-menu"
                 role="listbox"
                 aria-label="AI provider"
               >
                 ${this.providers.map(
-                  (p) => html`
+          (p) => html`
                     <button
                       class="selector-menu__item"
                       role="option"
@@ -344,10 +378,10 @@ export class AuraInput extends LitElement {
                       ${p.label}
                     </button>
                   `,
-                )}
+        )}
               </div>
             `
-          : nothing}
+        : nothing}
       </span>
     `;
   }
@@ -376,7 +410,7 @@ export class AuraInput extends LitElement {
           aria-expanded=${isOpen}
           ?disabled=${isDisabled}
           @click=${(e: MouseEvent) =>
-            !isDisabled && this._toggleDropdown("model", e)}
+        !isDisabled && this._toggleDropdown("model", e)}
         >
           <md-icon>${icon}</md-icon>
           <span>${label}</span>
@@ -385,10 +419,10 @@ export class AuraInput extends LitElement {
           >
         </button>
         ${isOpen && this.availableModels.length > 0
-          ? html`
+        ? html`
               <div class="selector-menu" role="listbox" aria-label="Model">
                 ${this.availableModels.map(
-                  (m) => html`
+          (m) => html`
                     <button
                       class="selector-menu__item"
                       role="option"
@@ -399,10 +433,10 @@ export class AuraInput extends LitElement {
                       ${m.name ?? m.id}
                     </button>
                   `,
-                )}
+        )}
               </div>
             `
-          : nothing}
+        : nothing}
       </span>
     `;
   }

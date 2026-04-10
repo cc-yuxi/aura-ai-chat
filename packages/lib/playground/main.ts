@@ -7,6 +7,7 @@ import type {
     ChatMessage,
     Conversation,
     IConversationManager,
+    ProviderConfig,
     Skill,
 } from "../src/index.js";
 
@@ -14,10 +15,10 @@ type DemoTool = AuraTool & { enabled?: boolean };
 type DemoSkill = Skill & { enabled?: boolean };
 type DemoConfig = AuraConfig & {
     appearance: NonNullable<AuraConfig["appearance"]>;
-    providers: NonNullable<AuraConfig["providers"]>;
     agent: NonNullable<AuraConfig["agent"]> & {
         skills: DemoSkill[];
         tools: DemoTool[];
+        providers: ProviderConfig[];
     };
 };
 
@@ -1021,16 +1022,18 @@ const defaultConfig: DemoConfig = {
             },
         ],
     },
-    providers: [
-        {
-            type: "built-in",
-            id: "gitHubCopilot",
-            config: {
-                rememberToken: true,
-            },
-        },
-    ],
     agent: {
+        providers: [
+            {
+                type: "built-in",
+                id: "gitHubCopilot",
+                config: {
+                    rememberToken: true,
+                    includedModels: ["gpt", "claude"],
+                    excludedModels: ["gpt-4"],
+                },
+            },
+        ],
         appSystemPrompt:
             "You are Aura, the simulated desk assistant for an agentic showcase demo. Select the skill that best matches the task, use tools instead of guessing, switch skills when the job changes, and rely on the host approval UI for final confirmation on destructive actions. Use `Trade Closer` for close-trade requests, `Execution Trader` for placing simulated orders, `Market Analyst` for research, `Risk Manager` for sizing and limits, and `General Operations` when no specialist skill is a clean fit.",
         additionalSafetyInstructions:
@@ -1078,12 +1081,12 @@ function cloneEditorConfig(): DemoConfig {
             appMetadata: { ...defaultConfig.identity.appMetadata },
         },
         appearance: { ...defaultConfig.appearance },
-        providers: defaultConfig.providers.map((p: any) => ({
-            ...p,
-            config: { ...(p.config ?? {}) },
-        })),
         agent: {
             ...defaultConfig.agent,
+            providers: defaultConfig.agent.providers.map((p: any) => ({
+                ...p,
+                config: { ...(p.config ?? {}) },
+            })),
             skills: [...defaultConfig.agent.skills],
             tools: [...defaultConfig.agent.tools],
         },
@@ -1109,11 +1112,10 @@ function syncBaseConfigFromDraft(draft: Partial<AuraConfig>): void {
         };
     }
 
-    if (draft.providers?.length) {
-        defaultConfig.providers = draft.providers as NonNullable<DemoConfig["providers"]>;
-    }
-
     if (draft.agent) {
+        if (draft.agent.providers?.length) {
+            defaultConfig.agent.providers = draft.agent.providers as ProviderConfig[];
+        }
         const {
             tools: _ignoredTools,
             skills: _ignoredSkills,

@@ -11,6 +11,7 @@ import type {
 import { needsConfirmation } from "../../types/index.js";
 import styles from "./aura-settings.css?inline";
 import type { AuraTheme } from "../../themes/index.js";
+import "../aura-json-view/aura-json-view.js";
 
 @customElement("aura-settings")
 export class AuraSettings extends LitElement {
@@ -32,6 +33,7 @@ export class AuraSettings extends LitElement {
   @state() private mcpServerFetchedTools = new Map<string, AuraTool[]>();
   @state() private mcpServerLoadingTools = new Set<string>();
   @state() private mcpServerStatus = new Map<string, 'connecting' | 'connected' | 'reconnecting' | 'error'>();
+  @state() private mcpServerInfo = new Map<string, { name: string; version: string; instructions?: string }>();
   private _mcpReconnectTimers = new Map<string, ReturnType<typeof setTimeout>>();
   private _mcpInitialized = false;
 
@@ -580,11 +582,18 @@ export class AuraSettings extends LitElement {
       const client = new SseMcpClient(srv.url, srv.id);
       await client.connect();
       const tools = await client.getTools();
+      const info = client.getServerInfo();
       client.disconnect();
       
       const updated = new Map(this.mcpServerFetchedTools);
       updated.set(srv.id, tools);
       this.mcpServerFetchedTools = updated;
+
+      if (info) {
+        const nextInfo = new Map(this.mcpServerInfo);
+        nextInfo.set(srv.id, info);
+        this.mcpServerInfo = nextInfo;
+      }
       
       setStatus('connected');
     } catch(err) {
@@ -663,6 +672,29 @@ export class AuraSettings extends LitElement {
                 <input type="checkbox" .checked=${srv.enabled} @change=${() => this.toggleMcpServer(srv.id)} style="margin: 0;"/>
                 <input type="text" .value=${srv.id} style="flex:0.3; min-width: 80px;" disabled />
                 <input type="text" .value=${srv.url} style="flex:0.7" disabled />
+                <span class="info-icon" style="margin-left: 4px;">
+                  i<span class="info-tooltip">
+                    ${(() => {
+                      const info = this.mcpServerInfo.get(srv.id);
+                      return html`
+                        <strong>ID:</strong> ${srv.id}<br/>
+                        <strong>URL:</strong> ${srv.url}<br/>
+                        <strong>Status:</strong> ${this.mcpServerStatus.get(srv.id) || 'unknown'}<br/>
+                        ${info ? html`
+                          <hr style="margin: 4px 0; border: 0; border-top: 1px solid rgba(255,255,255,0.2);"/>
+                          <strong>Server:</strong> ${info.name} (${info.version})<br/>
+                          ${info.description ? html`<strong>Description:</strong> ${info.description}<br/>` : nothing}
+                          ${info.instructions ? html`
+                            <div style="margin-top: 8px;">
+                              <strong>Instructions:</strong>
+                              <div style="margin-top: 4px; font-size: 11px; opacity: 0.9; white-space: pre-wrap;">${info.instructions}</div>
+                            </div>
+                          ` : nothing}
+                        ` : nothing}
+                      `;
+                    })()}
+                  </span>
+                </span>
                 ${srv.enabled ? (() => {
                   const status = this.mcpServerStatus.get(srv.id);
                   let icon = 'help';
@@ -694,7 +726,19 @@ export class AuraSettings extends LitElement {
                    return html`
                     <div class="tool-item">
                       <input type="checkbox" .checked=${!disabledSet.has(shortName)} @change=${() => this.toggleMcpTool(srv.id, shortName)} />
-                      <span class="tool-item__name">${shortName}</span>
+                      <span class="name-with-info">
+                        <span class="tool-item__name">${shortName}</span>
+                        <span class="info-icon">
+                          i<span class="info-tooltip">
+                            <strong style="font-size: 13px; display: block; margin-bottom: 4px;">${t.name}</strong>
+                            <div style="margin-bottom: 12px; opacity: 0.9;">${t.description}</div>
+                            <strong>Input Schema:</strong>
+                            <div style="margin-top: 6px; background: rgba(0,0,0,0.2); border-radius: 4px; padding: 4px;">
+                              <aura-json-view .data=${t.inputSchema}></aura-json-view>
+                            </div>
+                          </span>
+                        </span>
+                      </span>
                     </div>
                   `
                 })}

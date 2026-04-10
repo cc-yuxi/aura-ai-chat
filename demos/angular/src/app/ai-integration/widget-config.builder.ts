@@ -54,21 +54,21 @@ export class WidgetConfigBuilder {
         suggestedPrompts: this.suggestedPrompts,
         theme: this.getAuraTheme(),
       },
-      providers: [
-        {
-          type: 'custom',
-          id: this.mockProvider.id,
-          config: this.mockProvider,
-        },
-        {
-          type: 'built-in',
-          id: 'github-copilot',
-          config: {
-            rememberToken: true,
-          },
-        },
-      ],
       agent: {
+        providers: [
+          {
+            type: 'custom',
+            id: this.mockProvider.id,
+            config: this.mockProvider,
+          },
+          {
+            type: 'built-in',
+            id: 'github-copilot',
+            config: {
+              rememberToken: true,
+            },
+          },
+        ],
         appSystemPrompt: SYSTEM_PROMPT,
         resources: [this.createDashboardSnapshotResource()],
         skills: [dashboardBuilderSkill],

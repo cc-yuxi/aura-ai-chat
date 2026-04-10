@@ -184,6 +184,7 @@ export class GitHubCopilotProvider extends BaseProvider {
 
   constructor(config?: GitHubCopilotProviderConfig) {
     super();
+    if (config) this.configure(config as ProviderOptions);
     if (config?.clientId) this.clientId = config.clientId;
     if (config?.githubDeviceCodeUrl) {
       this.githubDeviceCodeUrl = config.githubDeviceCodeUrl;
