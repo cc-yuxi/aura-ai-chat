@@ -20,6 +20,14 @@ export class SkillRegistry {
     this.tools.set(tool.name, tool);
   }
 
+  unregisterTool(name: string): void {
+    this.tools.delete(name);
+  }
+
+  unregisterSkill(name: string): void {
+    this.skills.delete(name);
+  }
+
   getSkill(name: string): Skill | undefined {
     return this.skills.get(name);
   }
@@ -67,9 +75,29 @@ export class SkillRegistry {
 
   getActiveToolDefinitions(): ToolDefinition[] {
     const defs: ToolDefinition[] = [];
+    // Tools from skills
     for (const skill of this.getAllSkills()) {
       defs.push(...this.getToolDefinitionsForSkill(skill.name));
     }
+    
+    // Global tools (not in any skill, like common MCP tools)
+    const skillToolNames = new Set(this.getAllSkills().flatMap(s => s.tools));
+    for (const tool of this.getAllTools()) {
+      if (!skillToolNames.has(tool.name)) {
+        defs.push({
+          name: tool.name,
+          description: tool.description,
+          inputSchema: tool.inputSchema,
+          type: "function" as const,
+          function: {
+            name: tool.name,
+            description: tool.description,
+            parameters: tool.inputSchema,
+          },
+        });
+      }
+    }
+    
     return defs;
   }
 

@@ -51,6 +51,7 @@ import {
   type HumanInTheLoopResult,
 } from "../../services/communication-manager.js";
 import { WebMcpBridge } from "../../services/webmcp-bridge.js";
+import { SseMcpClient } from "../../services/mcp-sse-client.js";
 import "../aura-agent-step/aura-agent-step.js";
 
 type WidgetStatus = "idle" | "loading" | "streaming" | "error";
@@ -97,6 +98,9 @@ export class AuraChat extends LitElement {
   private providerManager: ProviderManager | undefined = undefined;
   private eventBus?: EventBus;
   private webMcpBridge?: WebMcpBridge;
+  private mcpSseClients = new Map<string, SseMcpClient>();
+  private skillRegistry = new SkillRegistry();
+  private _lastAgentConfigStr: string = "";
 
   private boundSystemTheme = this._onSystemThemeChange.bind(this);
   private orchestrator: CommunicationManager | null = null;
@@ -120,20 +124,31 @@ export class AuraChat extends LitElement {
       this.webMcpBridge.teardown();
       this.webMcpBridge = undefined;
     }
+    for (const client of this.mcpSseClients.values()) {
+      client.disconnect();
+    }
+    this.mcpSseClients.clear();
   }
 
   override async updated(changed: PropertyValues): Promise<void> {
     if (changed.has("config") && this.config) {
       this._applyTheme(this.config.appearance?.theme || "light");
       const prevConfig = changed.get("config") as AuraConfig | undefined;
+      
+      const currentAgentStr = JSON.stringify(this.config.agent || {});
+      const agentChanged = currentAgentStr !== this._lastAgentConfigStr;
+
       const needsInit =
         !this.orchestrator ||
         !prevConfig ||
         prevConfig.agent?.conversationManager !==
         this.config.agent?.conversationManager ||
         prevConfig.agent?.conversationId !== this.config.agent?.conversationId;
+
       if (needsInit) {
         await this.initManager();
+      } else if (agentChanged) {
+        await this.syncSettings();
       }
     }
   }
@@ -161,33 +176,26 @@ export class AuraChat extends LitElement {
   }
 
   private async initManager(): Promise<void> {
+    if (this.orchestrator) {
+      this.orchestrator.cancel();
+    }
+
     this.eventBus = new EventBus(this, this.config.onAuraEvent);
     this.historyManager = new HistoryManager(this.config, this.eventBus);
     this.providerManager = new ProviderManager(this.config?.agent?.providers);
-    const skillManager = new SkillRegistry();
-    if (this.config.agent?.skills) {
-      skillManager.registerSkills(this.config.agent.skills);
-    }
-    if (this.config.agent?.tools) {
-      skillManager.registerTools(this.config.agent.tools);
-    }
+    
+    // SkillRegistry is persistent, just clear it for fresh init
+    this.skillRegistry.clear();
+
     const toolRunner = new ToolDispatcher(
-      skillManager,
+      this.skillRegistry,
       this.config.agent?.toolTimeout,
     );
-    this.webMcpBridge?.teardown();
-    if (this.config.agent?.enableWebMcp) {
-      const conversationId = this.historyManager.getConversation().id;
-      this.webMcpBridge = new WebMcpBridge(
-        skillManager,
-        this.config.identity.appMetadata,
-        conversationId,
-      );
-      this.webMcpBridge.expose();
-      this.webMcpBridge.importPageTools();
-    }
+
+    await this.syncSettings();
+
     this.orchestrator = new CommunicationManager(
-      skillManager,
+      this.skillRegistry,
       toolRunner,
       this.providerManager,
       this.historyManager,
@@ -225,6 +233,128 @@ export class AuraChat extends LitElement {
       },
     );
     this.refreshMessages();
+  }
+
+  private async syncSettings(): Promise<void> {
+    if (!this.config || !this.historyManager) return;
+
+    this._lastAgentConfigStr = JSON.stringify(this.config.agent || {});
+
+    // Collect all current registered tools to detect unregistration later
+    const previousTools = new Set(this.skillRegistry.getAllTools().map(t => t.name));
+
+    // Update static tools and skills
+    this.skillRegistry.clear();
+
+    if (this.config.agent?.skills) {
+      this.skillRegistry.registerSkills(this.config.agent.skills);
+    }
+    if (this.config.agent?.tools) {
+      this.skillRegistry.registerTools(this.config.agent.tools);
+    }
+
+    // WebMCP Bridge update
+    if (this.config.agent?.enableWebMcp) {
+      if (!this.webMcpBridge) {
+        const conversationId = this.historyManager.getConversation().id;
+        this.webMcpBridge = new WebMcpBridge(
+          this.skillRegistry,
+          this.config.identity.appMetadata,
+          conversationId,
+        );
+        this.webMcpBridge.expose();
+        this.webMcpBridge.importPageTools();
+      } else {
+        // Re-import tools since we cleared the registry
+        this.webMcpBridge.importPageTools();
+      }
+    } else if (this.webMcpBridge) {
+      await this.webMcpBridge.teardown();
+      this.webMcpBridge = undefined;
+    }
+
+    // MCP Servers sync
+    const currentServers = this.config.agent?.mcpServers || [];
+    const enabledServers = currentServers.filter(s => s.enabled);
+    const enabledIds = new Set(enabledServers.map(s => s.id));
+
+    // Disconnect removed or disabled servers
+    for (const [id, client] of this.mcpSseClients.entries()) {
+      if (!enabledIds.has(id)) {
+        client.disconnect();
+        this.mcpSseClients.delete(id);
+        this.eventBus?.emit(AuraEventType.McpServerDisconnected, { serverId: id });
+        this.eventBus?.emit(AuraEventType.McpToolsUnregistered, { serverId: id });
+      }
+    }
+
+    // Connect new servers and update existing tool registrations
+    for (const srv of enabledServers) {
+      let client = this.mcpSseClients.get(srv.id);
+      if (!client) {
+        client = new SseMcpClient(srv.url, srv.id);
+        this.mcpSseClients.set(srv.id, client);
+        
+        this.eventBus?.emit(AuraEventType.McpServerConnecting, { serverId: srv.id, url: srv.url });
+
+        // Initial connection
+        client.connect().then(async () => {
+          this.eventBus?.emit(AuraEventType.McpServerConnected, { serverId: srv.id, url: srv.url });
+          await this.registerMcpServerTools(srv, client!);
+        }).catch(err => {
+          this.eventBus?.emit(AuraEventType.McpServerError, { serverId: srv.id, error: String(err) });
+          console.error(`Failed to connect to MCP Server ${srv.id}:`, err);
+        });
+      } else {
+        // Already exists, just re-sync tools in case disabled list changed
+        await this.registerMcpServerTools(srv, client);
+      }
+    }
+
+    // After all registrations are done, compare with previous tools to emit unregistration events
+    const currentTools = new Set(this.skillRegistry.getAllTools().map(t => t.name));
+    for (const toolName of previousTools) {
+      if (!currentTools.has(toolName)) {
+        // Find which server it belonged to if possible, or just emit a general event
+        // For now, general event if we don't have the mapping easily
+        this.eventBus?.emit(AuraEventType.McpToolsUnregistered, { tool: toolName });
+      }
+    }
+
+    // Update provider manager config if needed
+    if (this.providerManager && this.config.agent?.providers) {
+      this.providerManager.updateProviders(this.config.agent.providers);
+    }
+  }
+
+  private async registerMcpServerTools(srv: McpServerConfig, client: SseMcpClient) {
+    try {
+      const tools = await client.getTools();
+      const disabledSet = new Set(srv.disabledTools || []);
+      const filteredTools = tools.filter(t => !disabledSet.has(t.name.split(':').pop() || ""));
+      this.skillRegistry.registerTools(filteredTools);
+      
+      this.eventBus?.emit(AuraEventType.McpToolsRegistered, { 
+        serverId: srv.id, 
+        tools: filteredTools.map(t => t.name) 
+      });
+
+      // Register as skill if it has instructions
+      const info = client.getServerInfo();
+      if (info?.instructions) {
+        this.skillRegistry.registerSkill({
+          name: srv.id,
+          description: info.name || srv.id,
+          instructions: info.instructions,
+          tools: filteredTools.map(t => t.name)
+        });
+        this.eventBus?.emit(AuraEventType.Debug, { 
+          message: `Registered MCP server ${srv.id} as a skill` 
+        });
+      }
+    } catch (err) {
+      console.warn(`Could not register tools/skill for MCP server ${srv.id}:`, err);
+    }
   }
 
   refreshMessages(): void {

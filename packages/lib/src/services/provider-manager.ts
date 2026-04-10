@@ -21,6 +21,21 @@ export class ProviderManager {
     }
   }
 
+  updateProviders(configs: ProviderConfig[]): void {
+    const newProviders = createProviders(configs);
+    // Keep existing providers if they are still in the new list to maintain their state if possible
+    // For simplicity, we just replace the list but keep the active ID if still valid
+    this.providers = newProviders;
+    if (this.activeProviderId && !this.providers.some(p => p.id === this.activeProviderId)) {
+      this.activeProviderId = this.providers.length > 0 ? this.providers[0].id : null;
+    }
+    
+    // Apply current options to new providers
+    for (const provider of this.providers) {
+      provider.configure(this.providerOptions);
+    }
+  }
+
   getProviders(): AIProvider[] {
     return this.providers;
   }

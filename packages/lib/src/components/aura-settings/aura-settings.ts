@@ -3,9 +3,10 @@ import { customElement, property, state } from "lit/decorators.js";
 import type {
   AuraConfig,
   SettingsFieldId,
-  Skill,
   AuraTool,
   ProviderConfig,
+  McpServerConfig,
+  Skill,
 } from "../../types/index.js";
 import { needsConfirmation } from "../../types/index.js";
 import styles from "./aura-settings.css?inline";
@@ -24,6 +25,15 @@ export class AuraSettings extends LitElement {
   @state() private enabledToolList = new Set<string>();
   @state() private _selectedTheme: string | null = null;
   @state() private _themeDropdownOpen = false;
+
+  @state() private activeAgenticTab: 'general' | 'skills' | 'mcp' = 'general';
+
+  @state() private mcpServers: McpServerConfig[] = [];
+  @state() private mcpServerFetchedTools = new Map<string, AuraTool[]>();
+  @state() private mcpServerLoadingTools = new Set<string>();
+  @state() private mcpServerStatus = new Map<string, 'connecting' | 'connected' | 'reconnecting' | 'error'>();
+  private _mcpReconnectTimers = new Map<string, ReturnType<typeof setTimeout>>();
+  private _mcpInitialized = false;
 
   private static readonly THEME_OPTIONS: { id: string; label: string }[] = [
     { id: "light", label: "Light" },
@@ -249,6 +259,7 @@ export class AuraSettings extends LitElement {
         showThinkingProcess: this.chk("cfg-showThinkingProcess"),
         toolTimeout: parseInt(this.val("cfg-toolTimeout"), 10) || undefined,
         enableWebMcp: this.chk("cfg-enableWebMcp"),
+        mcpServers: this.mcpServers,
         providers: [
           {
             type: "built-in",
@@ -283,6 +294,15 @@ export class AuraSettings extends LitElement {
     ) {
       this.enabledToolList = new Set(this._tools.map((t) => t.name));
       this._toolsInitialized = true;
+    }
+    if (changed.has("config") && this.config) {
+      if (!this._mcpInitialized) {
+        this.mcpServers = JSON.parse(JSON.stringify(this.config.agent?.mcpServers || []));
+        this._mcpInitialized = true;
+        for (const srv of this.mcpServers) {
+          if (srv.enabled) this.fetchMcpTools(srv);
+        }
+      }
     }
   }
 
@@ -533,6 +553,157 @@ export class AuraSettings extends LitElement {
       ?.querySelectorAll<HTMLDetailsElement>("details.section")
       .forEach((d) => (d.open = false));
     this.openSections = new Set();
+  }
+
+  private async fetchMcpTools(srv: McpServerConfig, isRetry = false) {
+    if (this._mcpReconnectTimers.has(srv.id)) {
+      clearTimeout(this._mcpReconnectTimers.get(srv.id)!);
+      this._mcpReconnectTimers.delete(srv.id);
+    }
+    
+    if (this.mcpServerLoadingTools.has(srv.id) && !isRetry) return;
+    
+    if (!isRetry) {
+      this.mcpServerLoadingTools = new Set(this.mcpServerLoadingTools).add(srv.id);
+    }
+
+    const setStatus = (status: 'connecting' | 'connected' | 'reconnecting' | 'error') => {
+      const nextStatus = new Map(this.mcpServerStatus);
+      nextStatus.set(srv.id, status);
+      this.mcpServerStatus = nextStatus;
+    };
+
+    setStatus(isRetry ? 'reconnecting' : 'connecting');
+
+    try {
+      const { SseMcpClient } = await import("../../services/mcp-sse-client.js");
+      const client = new SseMcpClient(srv.url, srv.id);
+      await client.connect();
+      const tools = await client.getTools();
+      client.disconnect();
+      
+      const updated = new Map(this.mcpServerFetchedTools);
+      updated.set(srv.id, tools);
+      this.mcpServerFetchedTools = updated;
+      
+      setStatus('connected');
+    } catch(err) {
+      setStatus('error');
+      
+      const timer = setTimeout(() => {
+         const latestSrv = this.mcpServers.find(s => s.id === srv.id);
+         if (latestSrv?.enabled) {
+            this.fetchMcpTools(latestSrv, true);
+         }
+      }, 10000);
+      this._mcpReconnectTimers.set(srv.id, timer);
+    } finally {
+      if (!isRetry) {
+         const nextLoading = new Set(this.mcpServerLoadingTools);
+         nextLoading.delete(srv.id);
+         this.mcpServerLoadingTools = nextLoading;
+      }
+    }
+  }
+
+  private toggleMcpServer(id: string) {
+    this.mcpServers = this.mcpServers.map(s => {
+      if (s.id === id) {
+        const next = { ...s, enabled: !s.enabled };
+        if (next.enabled) {
+          this.fetchMcpTools(next);
+        } else {
+          if (this._mcpReconnectTimers.has(id)) {
+            clearTimeout(this._mcpReconnectTimers.get(id)!);
+            this._mcpReconnectTimers.delete(id);
+          }
+          const nextStatus = new Map(this.mcpServerStatus);
+          nextStatus.delete(id);
+          this.mcpServerStatus = nextStatus;
+        }
+        return next;
+      }
+      return s;
+    });
+  }
+
+  private toggleMcpTool(serverId: string, toolName: string) {
+    this.mcpServers = this.mcpServers.map(s => {
+      if (s.id === serverId) {
+        const disabled = new Set(s.disabledTools || []);
+        if (disabled.has(toolName)) disabled.delete(toolName);
+        else disabled.add(toolName);
+        return { ...s, disabledTools: Array.from(disabled) };
+      }
+      return s;
+    });
+  }
+
+  private renderMcpServers(): TemplateResult {
+    return html`
+      <div class="toggle" style="margin-bottom: 16px;">
+        <input
+          type="checkbox"
+          id="cfg-enableWebMcp"
+          .checked=${this._enableWebMcp}
+          ?disabled=${this.ro("enableWebMcp")}
+        />
+        <label for="cfg-enableWebMcp">Enable WebMCP Client Integration</label>
+      </div>
+
+      <div class="field">
+        <label>MCP Servers (SSE Transport)</label>
+        ${this.mcpServers.map(srv => {
+          const loading = this.mcpServerLoadingTools.has(srv.id);
+          const tools = this.mcpServerFetchedTools.get(srv.id) || [];
+          const disabledSet = new Set(srv.disabledTools || []);
+          return html`
+            <div class="skill-group" style="margin-bottom:12px;">
+              <div class="skill-group__header" style="display:flex; align-items:center; gap: 8px;">
+                <input type="checkbox" .checked=${srv.enabled} @change=${() => this.toggleMcpServer(srv.id)} style="margin: 0;"/>
+                <input type="text" .value=${srv.id} style="flex:0.3; min-width: 80px;" disabled />
+                <input type="text" .value=${srv.url} style="flex:0.7" disabled />
+                ${srv.enabled ? (() => {
+                  const status = this.mcpServerStatus.get(srv.id);
+                  let icon = 'help';
+                  let title = 'Unknown status';
+                  let color = '#9ca3af'; // gray
+                  let extraClass = '';
+                  
+                  if (status === 'connected') {
+                    icon = 'check_circle';
+                    title = 'Connected & tools loaded';
+                    color = '#10b981';
+                  } else if (status === 'error') {
+                    icon = 'error';
+                    title = 'Failed to connect. Retrying...';
+                    color = '#ef4444';
+                  } else if (status === 'reconnecting' || status === 'connecting') {
+                    icon = 'sync';
+                    title = status === 'connecting' ? 'Connecting to server...' : 'Reconnecting to server...';
+                    color = '#f59e0b';
+                    extraClass = 'status-blink';
+                  }
+                  
+                  return html`<md-icon class="mcp-status-icon ${extraClass}" style="font-size: 18px; color: ${color}; cursor: help;" title="${title}">${icon}</md-icon>`;
+                })() : nothing}
+              </div>
+              <div class="skill-group__tools" style="padding: 8px">
+                ${loading ? html`<p class="hint">Loading tools...</p>` : tools.length === 0 ? html`<p class="hint">No tools discovered</p>` : tools.map(t => {
+                   const shortName = t.name.split(':').pop() || "";
+                   return html`
+                    <div class="tool-item">
+                      <input type="checkbox" .checked=${!disabledSet.has(shortName)} @change=${() => this.toggleMcpTool(srv.id, shortName)} />
+                      <span class="tool-item__name">${shortName}</span>
+                    </div>
+                  `
+                })}
+              </div>
+            </div>
+          `;
+        })}
+      </div>
+    `;
   }
 
   private handleSectionToggle(section: string, e: Event): void {
@@ -813,85 +984,91 @@ export class AuraSettings extends LitElement {
           Agentic Intelligence ${this.sectionIcons("agenticIntelligence")}
         </summary>
         <div class="section__body">
-          <div class="field">
-            <label>System prompt</label>
-            <textarea
-              id="cfg-systemPrompt"
-              rows="3"
-              .value=${this._systemPrompt}
-              ?disabled=${this.ro("systemPrompt")}
-            ></textarea>
+          <div class="tabs">
+            <button class="tab-btn ${this.activeAgenticTab === 'general' ? 'active' : ''}" @click=${() => this.activeAgenticTab = 'general'}>General</button>
+            <button class="tab-btn ${this.activeAgenticTab === 'skills' ? 'active' : ''}" @click=${() => this.activeAgenticTab = 'skills'}>Skills & Tools</button>
+            <button class="tab-btn ${this.activeAgenticTab === 'mcp' ? 'active' : ''}" @click=${() => this.activeAgenticTab = 'mcp'}>MCP Servers</button>
           </div>
-          <div class="field">
-            <label>Safety instructions</label>
-            <textarea
-              id="cfg-safetyInstructions"
-              rows="2"
-              .value=${this._safetyInstructions}
-              ?disabled=${this.ro("safetyInstructions")}
-            ></textarea>
-          </div>
-          <div class="field">
-            <label>Max context tokens</label>
-            <input
-              type="number"
-              id="cfg-maxContextTokens"
-              .value=${String(this._maxContextTokens)}
-              min="256"
-              step="256"
-              ?disabled=${this.ro("maxContextTokens")}
-            />
-          </div>
-          <div class="toggle">
-            <input
-              type="checkbox"
-              id="cfg-enableStreaming"
-              .checked=${this._enableStreaming}
-              ?disabled=${this.ro("enableStreaming")}
-            />
-            <label for="cfg-enableStreaming">Enable streaming</label>
-          </div>
-          <div class="field">
-            <label>Max iterations</label>
-            <input
-              type="number"
-              id="cfg-maxIterations"
-              .value=${String(this._maxIterations)}
-              min="1"
-              max="50"
-              ?disabled=${this.ro("maxIterations")}
-            />
-          </div>
-          <div class="toggle">
-            <input
-              type="checkbox"
-              id="cfg-showThinkingProcess"
-              .checked=${this._showThinkingProcess}
-              ?disabled=${this.ro("showThinkingProcess")}
-            />
-            <label for="cfg-showThinkingProcess">Show thinking process</label>
-          </div>
-          <div class="field">
-            <label>Tool timeout (ms)</label>
-            <input
-              type="number"
-              id="cfg-toolTimeout"
-              .value=${String(this._toolTimeout)}
-              min="0"
-              step="1000"
-              ?disabled=${this.ro("toolTimeout")}
-            />
-          </div>
-          <div class="toggle">
-            <input
-              type="checkbox"
-              id="cfg-enableWebMcp"
-              .checked=${this._enableWebMcp}
-              ?disabled=${this.ro("enableWebMcp")}
-            />
-            <label for="cfg-enableWebMcp">Enable WebMCP</label>
-          </div>
-          ${this.renderSkillsTools()}
+
+          ${this.activeAgenticTab === "general" ? html`
+            <div class="field">
+              <label>System prompt</label>
+              <textarea
+                id="cfg-systemPrompt"
+                rows="3"
+                .value=${this._systemPrompt}
+                ?disabled=${this.ro("systemPrompt")}
+              ></textarea>
+            </div>
+            <div class="field">
+              <label>Safety instructions</label>
+              <textarea
+                id="cfg-safetyInstructions"
+                rows="2"
+                .value=${this._safetyInstructions}
+                ?disabled=${this.ro("safetyInstructions")}
+              ></textarea>
+            </div>
+            <div class="field">
+              <label>Max context tokens</label>
+              <input
+                type="number"
+                id="cfg-maxContextTokens"
+                .value=${String(this._maxContextTokens)}
+                min="256"
+                step="256"
+                ?disabled=${this.ro("maxContextTokens")}
+              />
+            </div>
+            <div class="toggle">
+              <input
+                type="checkbox"
+                id="cfg-enableStreaming"
+                .checked=${this._enableStreaming}
+                ?disabled=${this.ro("enableStreaming")}
+              />
+              <label for="cfg-enableStreaming">Enable streaming</label>
+            </div>
+            <div class="field">
+              <label>Max iterations</label>
+              <input
+                type="number"
+                id="cfg-maxIterations"
+                .value=${String(this._maxIterations)}
+                min="1"
+                max="50"
+                ?disabled=${this.ro("maxIterations")}
+              />
+            </div>
+            <div class="toggle">
+              <input
+                type="checkbox"
+                id="cfg-showThinkingProcess"
+                .checked=${this._showThinkingProcess}
+                ?disabled=${this.ro("showThinkingProcess")}
+              />
+              <label for="cfg-showThinkingProcess">Show thinking process</label>
+            </div>
+            <div class="field">
+              <label>Tool timeout (ms)</label>
+              <input
+                type="number"
+                id="cfg-toolTimeout"
+                .value=${String(this._toolTimeout)}
+                min="0"
+                step="1000"
+                ?disabled=${this.ro("toolTimeout")}
+              />
+            </div>
+          ` : nothing}
+
+          ${this.activeAgenticTab === "mcp" ? html`
+            ${this.renderMcpServers()}
+          ` : nothing}
+
+          ${this.activeAgenticTab === "skills" ? html`
+            ${this.renderSkillsTools()}
+          ` : nothing}
         </div>
       </details>
 

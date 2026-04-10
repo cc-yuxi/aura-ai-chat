@@ -382,7 +382,6 @@ export interface IConversationManager {
   createConversation?(conversation: Conversation): Promise<Conversation>;
   getConversation?(id: string): Promise<Conversation | undefined>;
   loadConversation?(conversationId: string): Promise<Conversation | null>;
-  loadConversationByContext?(contextId: string): Promise<Conversation | null>;
   listConversations?(): Promise<Conversation[]>;
   saveMessage(
     conversationId: string,
@@ -392,8 +391,6 @@ export interface IConversationManager {
   clearHistory?(): Promise<void>;
   saveToolCall?(entry: ToolCallLogEntry): Promise<void>;
 }
-
-export type ConversationManager = IConversationManager;
 
 export enum AuraEventType {
   ConversationStarted = "conversation-started",
@@ -414,6 +411,12 @@ export enum AuraEventType {
   AgentStepCompleted = "agent-step-completed",
   Debug = "debug",
   Error = "error",
+  McpServerConnecting = "mcp-server-connecting",
+  McpServerConnected = "mcp-server-connected",
+  McpServerDisconnected = "mcp-server-disconnected",
+  McpServerError = "mcp-server-error",
+  McpToolsRegistered = "mcp-tools-registered",
+  McpToolsUnregistered = "mcp-tools-unregistered",
 }
 
 export interface AuraEvent {
@@ -432,11 +435,19 @@ export interface SuggestedPrompt {
 
 export type RichContent = string;
 
+export interface McpServerConfig {
+  id: string;
+  url: string;
+  enabled: boolean;
+  disabledTools?: string[];
+}
+
 export interface AuraAgentConfig {
   appSystemPrompt?: string;
   resources?: AuraResource[];
   skills?: Skill[];
   tools?: AuraTool[];
+  mcpServers?: McpServerConfig[];
   conversationManager?: IConversationManager;
   conversationId?: string;
   maxContextTokens?: number;

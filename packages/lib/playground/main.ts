@@ -1045,6 +1045,14 @@ const defaultConfig: DemoConfig = {
         toolTimeout: 30_000,
         confirmationTimeoutMs: 65_000,
         enableWebMcp: false,
+        mcpServers: [
+            {
+                id: "mcp-gateway",
+                url: "http://127.0.0.1:8000/sse",
+                enabled: true,
+                disabledTools: []
+            }
+        ]
     },
 };
 
