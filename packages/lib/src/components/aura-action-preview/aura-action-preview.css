@@ -5,32 +5,32 @@
 }
 
 .card {
-  border: 1px solid var(--aura-border-color, #e5e7eb);
-  border-left: 4px solid #f59e0b;
+  border: 1px solid var(--aura-border-color);
+  border-left: 4px solid var(--aura-warning);
   border-radius: 8px;
-  background: var(--aura-bg, #fff);
+  background: var(--aura-bg);
   overflow: hidden;
   transition: border-color 0.2s ease;
 }
 
 .card--executing {
-  border-left-color: #8b5cf6;
+  border-left-color: var(--aura-ai);
 }
 
 .card--completed {
-  border-left-color: #10b981;
+  border-left-color: var(--aura-success);
 }
 
 .card--failed {
-  border-left-color: #ef4444;
+  border-left-color: var(--aura-error);
 }
 
 .card--rejected {
-  border-left-color: #9ca3af;
+  border-left-color: var(--aura-text-tertiary);
 }
 
 .card--timed-out {
-  border-left-color: #f59e0b;
+  border-left-color: var(--aura-warning);
 }
 
 .header {
@@ -38,7 +38,7 @@
   align-items: center;
   gap: 8px;
   padding: 10px 14px;
-  border-bottom: 1px solid var(--aura-border-color, #e5e7eb);
+  border-bottom: 1px solid var(--aura-border-color);
 }
 
 .header__icon {
@@ -50,7 +50,7 @@
 .header__title {
   font-size: 14px;
   font-weight: 600;
-  color: var(--aura-color, #1a1a1a);
+  color: var(--aura-color);
   flex: 1;
 }
 
@@ -65,55 +65,55 @@
 }
 
 .badge--pending {
-  background: #fffbeb;
-  color: #b45309;
+  background: color-mix(in srgb, var(--aura-warning) 16%, var(--aura-bg));
+  color: color-mix(in srgb, var(--aura-warning) 72%, var(--aura-fg));
 }
 
 .badge--executing {
-  background: #f3e8ff;
-  color: #7c3aed;
+  background: color-mix(in srgb, var(--aura-ai) 16%, var(--aura-bg));
+  color: var(--aura-ai);
   animation: pulse 1.5s ease-in-out infinite;
 }
 
 .badge--completed {
-  background: #ecfdf5;
-  color: #047857;
+  background: color-mix(in srgb, var(--aura-success) 16%, var(--aura-bg));
+  color: color-mix(in srgb, var(--aura-success) 72%, var(--aura-fg));
 }
 
 .badge--failed {
-  background: #fef2f2;
-  color: #b91c1c;
+  background: var(--aura-msg-error-bg);
+  color: var(--aura-msg-error-fg);
 }
 
 .badge--rejected {
-  background: #f3f4f6;
-  color: #6b7280;
+  background: var(--aura-surface-subtle);
+  color: var(--aura-text-secondary);
 }
 
 .badge--timed-out {
-  background: #fffbeb;
-  color: #b45309;
+  background: color-mix(in srgb, var(--aura-warning) 16%, var(--aura-bg));
+  color: color-mix(in srgb, var(--aura-warning) 72%, var(--aura-fg));
 }
 
 .description {
   padding: 8px 14px;
   font-size: 13px;
-  color: #6b7280;
+  color: var(--aura-text-secondary);
   line-height: 1.4;
 }
 
 .preview-container {
   padding: 8px 14px;
-  border-top: 1px solid var(--aura-border-color, #e5e7eb);
+  border-top: 1px solid var(--aura-border-color);
 }
 
 .preview-fallback {
-  background: #f3f4f6;
+  background: var(--aura-surface-subtle);
   border-radius: 6px;
   padding: 10px 12px;
   font-size: 12px;
   font-family: "Consolas", "Monaco", monospace;
-  color: #374151;
+  color: var(--aura-text-secondary);
   max-height: 140px;
   overflow-y: auto;
   word-break: break-all;
@@ -129,26 +129,26 @@
 }
 
 .preview-args::-webkit-scrollbar-thumb {
-  background: var(--aura-border-color, #d1d5db);
+  background: var(--aura-scrollbar-thumb);
   border-radius: 4px;
 }
 
 .preview-args::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+  background: var(--aura-scrollbar-thumb-hover);
 }
 
 .preview-custom-missing {
   padding: 8px 12px;
   font-size: 12px;
-  color: #9ca3af;
+  color: var(--aura-text-tertiary);
   font-style: italic;
 }
 
 .error-section {
   padding: 8px 14px;
-  border-top: 1px solid #fecaca;
-  background: #fef2f2;
-  color: #991b1b;
+  border-top: 1px solid color-mix(in srgb, var(--aura-msg-error-fg) 24%, transparent);
+  background: var(--aura-msg-error-bg);
+  color: var(--aura-msg-error-fg);
   font-size: 12px;
 }
 
@@ -157,7 +157,7 @@
   justify-content: flex-end;
   gap: 8px;
   padding: 10px 14px;
-  border-top: 1px solid var(--aura-border-color, #e5e7eb);
+  border-top: 1px solid var(--aura-border-color);
 }
 
 .btn {
@@ -175,23 +175,23 @@
 
 .btn--reject {
   background: transparent;
-  color: #6b7280;
-  border: 1px solid #d1d5db;
+  color: var(--aura-text-secondary);
+  border: 1px solid var(--aura-input-border);
 }
 
 .btn--reject:hover {
-  background: #fef2f2;
-  color: #ef4444;
-  border-color: #fca5a5;
+  background: var(--aura-msg-error-bg);
+  color: var(--aura-error);
+  border-color: color-mix(in srgb, var(--aura-error) 40%, transparent);
 }
 
 .btn--approve {
-  background: #10b981;
-  color: #fff;
+  background: var(--aura-success);
+  color: var(--aura-inverse-fg);
 }
 
 .btn--approve:hover {
-  background: #059669;
+  background: color-mix(in srgb, var(--aura-success) 88%, black);
 }
 
 .btn:disabled {
@@ -200,31 +200,31 @@
 }
 
 .risk-destructive.header__icon {
-  color: #ef4444;
+  color: var(--aura-error);
 }
 
 .risk-moderate.header__icon {
-  color: #f59e0b;
+  color: var(--aura-warning);
 }
 
 .card--executing .header__icon {
-  color: #8b5cf6;
+  color: var(--aura-ai);
 }
 
 .card--completed .header__icon {
-  color: #10b981;
+  color: var(--aura-success);
 }
 
 .card--failed .header__icon {
-  color: #ef4444;
+  color: var(--aura-error);
 }
 
 .card--rejected .header__icon {
-  color: #9ca3af;
+  color: var(--aura-text-tertiary);
 }
 
 .card--timed-out .header__icon {
-  color: #f59e0b;
+  color: var(--aura-warning);
 }
 
 @keyframes slideIn {

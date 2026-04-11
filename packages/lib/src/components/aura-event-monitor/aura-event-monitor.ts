@@ -264,7 +264,7 @@ export class AuraEventMonitorElement extends LitElement {
 
   private get jsonViewStyle(): string {
     return [
-      "--aura-json-bg: var(--aura-input-bg, #ffffff)",
+      "--aura-json-bg: var(--aura-input-bg)",
       "--aura-json-view-max-height: 220px",
     ].join("; ");
   }

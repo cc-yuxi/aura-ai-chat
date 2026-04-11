@@ -1,14 +1,14 @@
 :host {
   display: block;
-  color: var(--aura-color, #1a1a1a);
-  --_accent: #187aba;
-  --_accent-hover: #126a9e;
-  --_border: var(--aura-border-color, #e5e7eb);
-  --_input-bg: var(--aura-bg, #fff);
-  --_input-border: #d1d5db;
+  color: var(--aura-color);
+  --_accent: var(--aura-accent);
+  --_accent-hover: var(--aura-accent-hover);
+  --_border: var(--aura-border-color);
+  --_input-bg: var(--aura-bg);
+  --_input-border: var(--aura-input-border);
   --_radius: 8px;
-  --_fg: var(--aura-color, #1a1a1a);
-  --_muted: var(--aura-muted-color, #6b7280);
+  --_fg: var(--aura-color);
+  --_muted: var(--aura-muted-color);
 }
 
 .section {
@@ -25,7 +25,7 @@
   font-weight: 600;
   font-size: 14px;
   user-select: none;
-  background: var(--aura-header-bg, #fafafa);
+  background: var(--aura-header-bg);
 }
 
 .section summary::-webkit-details-marker {
@@ -33,14 +33,14 @@
 }
 
 .section summary:hover {
-  background: #f3f4f6;
+  background: var(--aura-action-hover-bg);
 }
 
 .summary__icons {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #9ca3af;
+  color: var(--aura-text-tertiary);
 }
 
 .lock-icon {
@@ -69,7 +69,7 @@
 .field label {
   font-size: 12px;
   font-weight: 600;
-  color: #4b5563;
+  color: var(--aura-text-secondary);
 }
 
 .field input[type="text"],
@@ -91,13 +91,13 @@
 .field input:focus,
 .field textarea:focus {
   border-color: var(--_accent);
-  box-shadow: 0 0 0 3px rgba(24, 122, 186, 0.1);
+  box-shadow: 0 0 0 3px var(--aura-focus-ring);
 }
 
 .field input:disabled,
 .field textarea:disabled {
-  background: #f3f4f6;
-  color: #9ca3af;
+  background: var(--aura-surface-subtle);
+  color: var(--aura-text-tertiary);
   cursor: not-allowed;
 }
 
@@ -140,7 +140,7 @@
   padding: 12px;
   border: 1px solid var(--_border);
   border-radius: var(--_radius);
-  background: #fafafa;
+  background: var(--aura-surface-subtle);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -149,7 +149,7 @@
 .provider-group__label {
   font-size: 12px;
   font-weight: 700;
-  color: #374151;
+  color: var(--aura-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -182,7 +182,7 @@
 .theme-selector-trigger .chevron {
   font-size: 18px;
   --md-icon-size: 18px;
-  color: #9ca3af;
+  color: var(--aura-text-tertiary);
 }
 
 .theme-selector-menu {
@@ -190,10 +190,10 @@
   top: 100%;
   left: 0;
   right: 0;
-  background: #fff;
-  border: 1px solid #e5e7eb;
+  background: var(--aura-bg);
+  border: 1px solid var(--aura-border-color);
   border-radius: var(--_radius);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--aura-shadow);
   z-index: 1000;
   margin-top: 4px;
   padding: 4px;
@@ -207,17 +207,17 @@
   background: none;
   border-radius: 4px;
   font-size: 13px;
-  color: #374151;
+  color: var(--aura-text-secondary);
   text-align: left;
   cursor: pointer;
 }
 
 .theme-selector-menu__item:hover {
-  background: #f3f4f6;
+  background: var(--aura-action-hover-bg);
 }
 
 .theme-selector-menu__item[aria-selected="true"] {
-  background: #eff6ff;
+  background: var(--aura-accent-light);
   color: var(--_accent);
   font-weight: 500;
 }
@@ -229,7 +229,7 @@
   gap: 12px;
   padding: 16px;
   border-top: 1px solid var(--_border);
-  background: #fff;
+  background: var(--aura-bg);
   position: sticky;
   bottom: 0;
 }
@@ -254,7 +254,7 @@
 }
 
 .btn-text:hover {
-  background: rgba(24, 122, 186, 0.05);
+  background: var(--aura-surface-hover);
 }
 
 .btn {
@@ -268,7 +268,7 @@
 
 .btn-primary {
   background: var(--_accent);
-  color: #fff;
+  color: var(--aura-inverse-fg);
   border: none;
 }
 
@@ -277,13 +277,13 @@
 }
 
 .btn-secondary {
-  background: #fff;
-  color: #374151;
-  border: 1px solid #d1d5db;
+  background: var(--aura-bg);
+  color: var(--aura-text-secondary);
+  border: 1px solid var(--aura-input-border);
 }
 
 .btn-secondary:hover {
-  background: #f9fafb;
+  background: var(--aura-surface-subtle);
 }
 
 .skill-group {
@@ -295,7 +295,7 @@
 
 .skill-group__header {
   padding: 10px 12px;
-  background: #f9fafb;
+  background: var(--aura-surface-subtle);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -327,7 +327,7 @@
 
 .tool-item__name {
   font-size: 13px;
-  color: #374151;
+  color: var(--aura-text-secondary);
 }
 
 .name-with-info {
@@ -341,8 +341,8 @@
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  border: 1px solid #9ca3af;
-  color: #9ca3af;
+  border: 1px solid var(--aura-text-tertiary);
+  color: var(--aura-text-tertiary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -356,8 +356,8 @@
 .info-tooltip {
   display: none;
   position: fixed;
-  background: #1f2937;
-  color: #fff;
+  background: color-mix(in srgb, var(--aura-fg) 88%, var(--aura-bg));
+  color: var(--aura-inverse-fg);
   padding: 12px;
   border-radius: 8px;
   font-size: 11px;
@@ -365,13 +365,13 @@
   max-width: 320px;
   max-height: 400px;
   overflow-y: auto;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--aura-shadow-strong);
   pointer-events: auto;
   font-family: sans-serif;
   font-weight: normal;
   line-height: 1.5;
   scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,0.2) transparent;
+  scrollbar-color: color-mix(in srgb, var(--aura-inverse-fg) 20%, transparent) transparent;
 }
 
 .info-tooltip::-webkit-scrollbar {
@@ -379,7 +379,7 @@
 }
 
 .info-tooltip::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.2);
+  background: color-mix(in srgb, var(--aura-inverse-fg) 20%, transparent);
   border-radius: 2px;
 }
 
@@ -397,14 +397,14 @@
 }
 
 .tool-badge--confirm {
-  background: #fef3c7;
-  color: #92400e;
+  background: color-mix(in srgb, var(--aura-warning) 24%, var(--aura-bg));
+  color: color-mix(in srgb, var(--aura-warning) 72%, var(--aura-fg));
 }
 
 .tabs {
   display: flex;
   gap: 2px;
-  background: #f3f4f6;
+  background: var(--aura-surface-subtle);
   padding: 4px;
   border-radius: var(--_radius);
   margin-bottom: 8px;
@@ -418,19 +418,19 @@
   border-radius: calc(var(--_radius) - 2px);
   font-size: 13px;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--aura-text-secondary);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .tab-btn:hover {
-  color: #374151;
+  color: var(--aura-text-secondary);
 }
 
 .tab-btn.active {
-  background: #fff;
+  background: var(--aura-bg);
   color: var(--_accent);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: var(--aura-shadow);
 }
 
 .mcp-status-icon {
@@ -442,7 +442,15 @@
 }
 
 @keyframes aura-blink {
-  0% { opacity: 0.3; }
-  50% { opacity: 1; }
-  100% { opacity: 0.3; }
+  0% {
+    opacity: 0.3;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.3;
+  }
 }

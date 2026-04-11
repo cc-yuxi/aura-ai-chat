@@ -16,6 +16,7 @@ import type {
   AIProvider,
   Conversation,
   AgentStep,
+  McpServerConfig,
 } from "../../types/index.js";
 import { AuraEventType } from "../../types/index.js";
 import {
@@ -91,7 +92,6 @@ export class AuraChat extends LitElement {
   @state() private settingsOpen = false;
   @state() private historyOpen = false;
 
-  @query("#settingsConfig") private settingsEl!: any;
   @query(".transcript") private transcriptEl!: HTMLDivElement;
   @query("aura-input") private chatInputEl!: AuraInput;
 
@@ -610,6 +610,7 @@ export class AuraChat extends LitElement {
         .allowedAttachmentTypes=${this.config?.appearance
         ?.allowedAttachmentTypes ?? []}
         .providerManager=${this.providerManager}
+        .skillRegistry=${this.skillRegistry}
         .appId=${this.config?.identity?.appMetadata?.appId ?? "default"}
         .suggestedPrompts=${this.config?.appearance?.suggestedPrompts ?? []}
         @send-message=${this.handleSendMessage}
@@ -903,12 +904,33 @@ export class AuraChat extends LitElement {
   }
 
   private handleSettingsApply(e: CustomEvent): void {
+    const nextConfig = e.detail as Partial<AuraConfig>;
+    this.config = {
+      ...this.config,
+      ...nextConfig,
+      identity: {
+        ...this.config.identity,
+        ...nextConfig.identity,
+        appMetadata: {
+          ...this.config.identity?.appMetadata,
+          ...nextConfig.identity?.appMetadata,
+        },
+      },
+      appearance: {
+        ...this.config.appearance,
+        ...nextConfig.appearance,
+      },
+      agent: {
+        ...this.config.agent,
+        ...nextConfig.agent,
+      },
+    };
     this.settingsOpen = false;
     this.dispatchEvent(
       new CustomEvent("settings-apply", {
         bubbles: true,
         composed: true,
-        detail: e.detail,
+        detail: this.config,
       }),
     );
   }

@@ -24,16 +24,16 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: var(--aura-avatar-bg, #f3f4f6);
+  background: var(--aura-avatar-bg);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--aura-avatar-color, #6b7280);
+  color: var(--aura-avatar-color);
 }
 
 .user-message .message-avatar {
-  background: var(--aura-accent, #187aba);
-  color: #fff;
+  background: var(--aura-accent);
+  color: var(--aura-inverse-fg);
 }
 
 .message-content {
@@ -48,8 +48,8 @@
 }
 
 .message-error .message-avatar {
-  background: var(--aura-msg-error-bg, #fef2f2);
-  color: var(--aura-msg-error-fg, #991b1b);
+  background: var(--aura-msg-error-bg);
+  color: var(--aura-msg-error-fg);
 }
 
 .message-header {
@@ -62,23 +62,23 @@
 .message-sender {
   font-size: 13px;
   font-weight: 600;
-  color: var(--aura-title-color, #1a1a1a);
+  color: var(--aura-title-color);
 }
 
 .message-time {
   font-size: 11px;
-  color: var(--aura-muted-color, #9ca3af);
+  color: var(--aura-muted-color);
 }
 
 .message-body {
   font-size: var(--aura-message-font-size, 14px);
   line-height: 1.6;
-  color: var(--aura-text-color, #374151);
+  color: var(--aura-text-color);
   word-break: break-word;
 }
 
 .user-message .message-body {
-  background: var(--aura-user-message-bg, #f3f4f6);
+  background: var(--aura-user-message-bg);
   padding: 10px 14px;
   border-radius: 12px 2px 12px 12px;
   max-width: 85%;
@@ -92,13 +92,13 @@
   max-width: 90%;
   padding: 10px 14px;
   border-radius: 12px 12px 12px 2px;
-  background: var(--aura-msg-error-bg, #fef2f2);
-  color: var(--aura-msg-error-fg, #991b1b);
-  border: 1px solid color-mix(in srgb, var(--aura-msg-error-fg, #991b1b) 20%, transparent);
+  background: var(--aura-msg-error-bg);
+  color: var(--aura-msg-error-fg);
+  border: 1px solid color-mix(in srgb, var(--aura-msg-error-fg) 20%, transparent);
 }
 
 .message-error .message-sender {
-  color: var(--aura-msg-error-fg, #991b1b);
+  color: var(--aura-msg-error-fg);
 }
 
 .message-error .message-text a {
@@ -141,17 +141,17 @@
   margin-top: 8px;
   padding: 4px 12px;
   border-radius: 4px;
-  border: 1px solid var(--aura-msg-error-fg, #ef4444);
+  border: 1px solid var(--aura-msg-error-fg);
   background: transparent;
-  color: var(--aura-msg-error-fg, #ef4444);
+  color: var(--aura-msg-error-fg);
   font-size: 12px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .retry-btn:hover {
-  background: var(--aura-msg-error-fg, #ef4444);
-  color: #fff;
+  background: var(--aura-msg-error-fg);
+  color: var(--aura-inverse-fg);
 }
 
 @keyframes fadeIn {

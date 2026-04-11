@@ -63,7 +63,9 @@ export {
 } from "./types/index.js";
 
 export { AuraChat } from "./components/aura-chat/aura-chat.js";
+export { AuraMcpServerListElement } from "./components/aura-mcp-server-list/aura-mcp-server-list.js";
 export { AuraMessagesElement } from "./components/aura-messages/aura-messages.js";
+export { AuraSkillListElement } from "./components/aura-skill-list/aura-skill-list.js";
 export { SuggestedPromptsElement } from "./components/suggested-prompts/suggested-prompts.js";
 export { ConfirmationBubbleElement } from "./components/confirmation-bubble/confirmation-bubble.js";
 export { FileAttachmentElement } from "./components/file-attachment/file-attachment.js";

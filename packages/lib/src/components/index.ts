@@ -2,6 +2,8 @@ export { AuraChat } from "./aura-chat/aura-chat.js";
 export { AuraInput } from "./aura-input/aura-input.js";
 export { AuraHistory } from "./aura-history/aura-history.js";
 export { AuraSettings } from "./aura-settings/aura-settings.js";
+export { AuraMcpServerListElement } from "./aura-mcp-server-list/aura-mcp-server-list.js";
+export { AuraSkillListElement } from "./aura-skill-list/aura-skill-list.js";
 export { AuraMessagesElement } from "./aura-messages/aura-messages.js";
 export { SuggestedPromptsElement } from "./suggested-prompts/suggested-prompts.js";
 export { ActionPreviewElement } from "./aura-action-preview/aura-action-preview.js";

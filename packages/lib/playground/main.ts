@@ -397,16 +397,20 @@ class DemoCloseTradeCard extends HTMLElement {
                 :host {
                     display: block;
                     font-family: Inter, system-ui, sans-serif;
+                    --approval-border: var(--aura-border-color, rgba(15, 23, 42, 0.12));
+                    --approval-bg: var(--aura-bg, #fff);
+                    --approval-fg: var(--aura-fg, #0f172a);
+                    --approval-muted: var(--aura-muted-color, #64748b);
+                    --approval-subtle: var(--aura-surface-subtle, #f8fafc);
+                    --approval-text: var(--aura-text-secondary, #334155);
                 }
 
                 .card {
-                    border: 1px solid rgba(15, 23, 42, 0.12);
+                    border: 1px solid var(--approval-border);
                     border-radius: 12px;
                     padding: 12px;
-                    background:
-                        linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98)),
-                        #fff;
-                    color: #0f172a;
+                    background: var(--approval-bg);
+                    color: var(--approval-fg);
                 }
 
                 .eyebrow {
@@ -415,7 +419,7 @@ class DemoCloseTradeCard extends HTMLElement {
                     font-weight: 700;
                     letter-spacing: 0.08em;
                     text-transform: uppercase;
-                    color: #64748b;
+                    color: var(--approval-muted);
                 }
 
                 .title {
@@ -428,7 +432,7 @@ class DemoCloseTradeCard extends HTMLElement {
                     margin: 6px 0 12px;
                     font-size: 13px;
                     line-height: 1.45;
-                    color: #334155;
+                    color: var(--approval-text);
                 }
 
                 .grid {
@@ -440,8 +444,8 @@ class DemoCloseTradeCard extends HTMLElement {
                 .metric {
                     padding: 10px;
                     border-radius: 10px;
-                    background: #f8fafc;
-                    border: 1px solid rgba(148, 163, 184, 0.22);
+                    background: var(--approval-subtle);
+                    border: 1px solid var(--approval-border);
                 }
 
                 .label {
@@ -451,14 +455,14 @@ class DemoCloseTradeCard extends HTMLElement {
                     font-weight: 600;
                     letter-spacing: 0.04em;
                     text-transform: uppercase;
-                    color: #64748b;
+                    color: var(--approval-muted);
                 }
 
                 .value {
                     display: block;
                     font-size: 14px;
                     font-weight: 600;
-                    color: #0f172a;
+                    color: var(--approval-fg);
                 }
             </style>
             <div class="card">

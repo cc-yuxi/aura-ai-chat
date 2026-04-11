@@ -14,8 +14,8 @@
   flex-direction: column;
   gap: 2px;
   padding: 8px 12px;
-  background: var(--aura-bg, #fff);
-  border: 1px solid var(--aura-border-color, #e5e7eb);
+  background: var(--aura-bg);
+  border: 1px solid var(--aura-border-color);
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s;
@@ -24,20 +24,20 @@
 }
 
 .prompt-chip:hover {
-  background: #f9fafb;
-  border-color: #d1d5db;
+  background: var(--aura-surface-subtle);
+  border-color: var(--aura-input-border);
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--aura-shadow);
 }
 
 .prompt-chip__title {
   font-size: 13px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--aura-text-primary);
 }
 
 .prompt-chip__desc {
   font-size: 11px;
-  color: #6b7280;
+  color: var(--aura-text-secondary);
   line-height: 1.3;
 }

@@ -3,16 +3,11 @@
   flex-direction: row;
   height: var(--aura-height, 100%);
   width: var(--aura-width, 100%);
-  background: var(--aura-bg, #fff);
-  color: var(--aura-color, #1a1a1a);
-  font-family: var(--aura-font-family,
-      -apple-system,
-      BlinkMacSystemFont,
-      "Segoe UI",
-      Roboto,
-      sans-serif);
+  background: var(--aura-bg);
+  color: var(--aura-color);
+  font-family: var(--aura-font-family);
   overflow: hidden;
-  border: 1px solid var(--aura-border-color, #e5e7eb);
+  border: 1px solid var(--aura-border-color);
   min-height: 0;
 }
 
@@ -29,8 +24,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  border-bottom: 1px solid var(--aura-border-color, #e5e7eb);
-  background: var(--aura-header-bg, #fafafa);
+  border-bottom: 1px solid var(--aura-border-color);
+  background: var(--aura-header-bg);
   flex-shrink: 0;
 }
 
@@ -45,13 +40,13 @@
   align-items: center;
   font-size: 20px;
   line-height: 1;
-  color: var(--aura-header-icon-color, #6b7280);
+  color: var(--aura-header-icon-color);
 }
 
 .header__title {
   font-size: 15px;
   font-weight: 600;
-  color: var(--aura-header-title-color, #1a1a1a);
+  color: var(--aura-header-title-color);
 }
 
 .header__actions {
@@ -71,7 +66,7 @@
   cursor: pointer;
   border-radius: 4px;
   font-size: 16px;
-  color: var(--aura-action-color, #6b7280);
+  color: var(--aura-action-color);
   transition:
     background 0.15s,
     color 0.15s;
@@ -79,8 +74,8 @@
 }
 
 .header__btn:hover {
-  background: var(--aura-action-hover-bg, #f3f4f6);
-  color: var(--aura-action-hover-color, #1a1a1a);
+  background: var(--aura-action-hover-bg);
+  color: var(--aura-action-hover-color);
 }
 
 .transcript {
@@ -101,12 +96,12 @@
 }
 
 .transcript::-webkit-scrollbar-thumb {
-  background: var(--aura-border-color, #d1d5db);
+  background: var(--aura-scrollbar-thumb);
   border-radius: 4px;
 }
 
 .transcript::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+  background: var(--aura-scrollbar-thumb-hover);
 }
 
 .empty-state {
@@ -121,7 +116,7 @@
 
 .empty-state__icon {
   font-size: 48px;
-  color: #d1d5db;
+  color: var(--aura-text-tertiary);
   margin-bottom: 16px;
   line-height: 1;
 }
@@ -129,13 +124,13 @@
 .empty-state__heading {
   font-size: 18px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--aura-text-primary);
   margin: 0 0 8px;
 }
 
 .empty-state__desc {
   font-size: 14px;
-  color: #6b7280;
+  color: var(--aura-text-secondary);
   margin: 0 0 24px;
   max-width: 280px;
   line-height: 1.5;
@@ -153,8 +148,8 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: var(--aura-ai-avatar-bg, #10b981);
-  color: #fff;
+  background: var(--aura-ai-avatar-bg);
+  color: var(--aura-inverse-fg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -179,18 +174,18 @@
 .typing-sender {
   font-size: 12px;
   font-weight: 600;
-  color: var(--aura-sender-color, #6b7280);
+  color: var(--aura-sender-color);
 }
 
 .typing-label {
   font-size: 11px;
-  color: #9ca3af;
+  color: var(--aura-text-tertiary);
   white-space: nowrap;
 }
 
 .typing-body {
   padding: 10px 14px;
-  background: var(--aura-assistant-message-bg, #f3f4f6);
+  background: var(--aura-assistant-message-bg);
   border-radius: 16px 16px 16px 4px;
 }
 
@@ -203,7 +198,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #9ca3af;
+  background: var(--aura-text-tertiary);
   animation: bounce 1.4s ease-in-out infinite;
 }
 
@@ -224,7 +219,7 @@
 
 .streaming-content {
   padding: 10px 14px;
-  background: var(--aura-assistant-message-bg, #f3f4f6);
+  background: var(--aura-assistant-message-bg);
   border-radius: 16px 16px 16px 4px;
   font-size: 14px;
   line-height: 1.5;
@@ -242,7 +237,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #9ca3af;
+  background: var(--aura-text-tertiary);
   animation: bounce 1.4s ease-in-out infinite;
 }
 
@@ -298,20 +293,20 @@
 
 .copilot-login__icon {
   font-size: 48px;
-  color: #6b7280;
+  color: var(--aura-text-secondary);
   line-height: 1;
 }
 
 .copilot-login__heading {
   font-size: 18px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--aura-text-primary);
   margin: 0;
 }
 
 .copilot-login__desc {
   font-size: 14px;
-  color: #6b7280;
+  color: var(--aura-text-secondary);
   margin: 0;
   max-width: 320px;
   line-height: 1.5;
@@ -324,8 +319,8 @@
   padding: 10px 20px;
   border: none;
   border-radius: 8px;
-  background: var(--aura-send-btn-bg, var(--aura-accent, #187aba));
-  color: #fff;
+  background: var(--aura-send-btn-bg, var(--aura-accent));
+  color: var(--aura-inverse-fg);
   font-size: 14px;
   font-weight: 600;
   font-family: inherit;
@@ -334,7 +329,7 @@
 }
 
 .copilot-login__btn:hover {
-  background: var(--aura-send-btn-hover-bg, #126a9e);
+  background: var(--aura-send-btn-hover-bg, var(--aura-accent-hover));
 }
 
 .copilot-login__btn md-icon {
@@ -346,7 +341,7 @@
   align-items: center;
   gap: 6px;
   font-size: 13px;
-  color: #6b7280;
+  color: var(--aura-text-secondary);
   cursor: pointer;
 }
 
@@ -368,13 +363,13 @@
 .copilot-device__heading {
   font-size: 16px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--aura-text-primary);
   margin: 0;
 }
 
 .copilot-device__desc {
   font-size: 14px;
-  color: #6b7280;
+  color: var(--aura-text-secondary);
   margin: 0;
   max-width: 320px;
   line-height: 1.5;
@@ -391,11 +386,11 @@
   font-size: 28px;
   font-weight: 700;
   letter-spacing: 4px;
-  color: var(--aura-accent, #187aba);
-  background: #f3f4f6;
+  color: var(--aura-accent);
+  background: var(--aura-surface-subtle);
   padding: 12px 24px;
   border-radius: 8px;
-  border: 2px dashed var(--aura-border-color, #e5e7eb);
+  border: 2px dashed var(--aura-border-color);
   user-select: all;
 }
 
@@ -404,19 +399,19 @@
   align-items: center;
   justify-content: center;
   background: none;
-  border: 1px solid var(--aura-border-color, #e5e7eb);
+  border: 1px solid var(--aura-border-color);
   border-radius: 6px;
   padding: 6px;
   cursor: pointer;
-  color: #6b7280;
+  color: var(--aura-text-secondary);
   transition:
     color 0.15s,
     border-color 0.15s;
 }
 
 .copilot-device__copy-btn:hover {
-  color: var(--aura-accent, #187aba);
-  border-color: var(--aura-accent, #187aba);
+  color: var(--aura-accent);
+  border-color: var(--aura-accent);
 }
 
 .copilot-device__copy-btn md-icon {
@@ -429,14 +424,14 @@
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: #6b7280;
+  color: var(--aura-text-secondary);
 }
 
 .copilot-device__spinner {
   width: 16px;
   height: 16px;
-  border: 2px solid #e5e7eb;
-  border-top-color: var(--aura-accent, #187aba);
+  border: 2px solid var(--aura-border-color);
+  border-top-color: var(--aura-accent);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -449,7 +444,7 @@
 
 .copilot-device__link {
   font-size: 13px;
-  color: var(--aura-accent, #187aba);
+  color: var(--aura-accent);
   text-decoration: underline;
   cursor: pointer;
 }
@@ -457,7 +452,7 @@
 .settings-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--aura-overlay-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -466,10 +461,10 @@
 }
 
 .settings-modal {
-  background: var(--aura-bg, #fff);
-  color: var(--aura-color, #1a1a1a);
+  background: var(--aura-bg);
+  color: var(--aura-color);
   border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  box-shadow: var(--aura-shadow-strong);
   width: 90%;
   max-width: 800px;
   max-height: 85%;
@@ -496,14 +491,14 @@
   align-items: center;
   justify-content: space-between;
   padding: 14px 16px;
-  border-bottom: 1px solid var(--aura-border-color, #e5e7eb);
+  border-bottom: 1px solid var(--aura-border-color);
   flex-shrink: 0;
 }
 
 .settings-modal__title {
   font-size: 15px;
   font-weight: 700;
-  color: var(--aura-header-title-color, #1a1a1a);
+  color: var(--aura-header-title-color);
 }
 
 .settings-modal__close {
@@ -516,19 +511,19 @@
   border: none;
   cursor: pointer;
   border-radius: 4px;
-  color: var(--aura-action-color, #6b7280);
+  color: var(--aura-action-color);
   padding: 0;
 }
 
 .settings-modal__close:hover {
-  background: var(--aura-action-hover-bg, #f3f4f6);
-  color: var(--aura-action-hover-color, #1a1a1a);
+  background: var(--aura-action-hover-bg);
+  color: var(--aura-action-hover-color);
 }
 
 .settings-modal__body {
   flex: 1;
   overflow-y: auto;
-  background: var(--aura-bg, #fff);
+  background: var(--aura-bg);
   display: flex;
   flex-direction: column;
 }
@@ -542,10 +537,10 @@
 }
 
 .settings-modal__body::-webkit-scrollbar-thumb {
-  background: var(--aura-border-color, #d1d5db);
+  background: var(--aura-scrollbar-thumb);
   border-radius: 4px;
 }
 
 .settings-modal__body::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
-}
+  background: var(--aura-scrollbar-thumb-hover);
+}

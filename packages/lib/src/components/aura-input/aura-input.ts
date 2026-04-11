@@ -26,7 +26,9 @@ import styles from "./aura-input.css?inline";
 
 import "../file-attachment/file-attachment.js";
 import "../suggested-prompts/suggested-prompts.js";
+import "../aura-skill-list/aura-skill-list.js";
 import type { ProviderManager } from "../../services/provider-manager.js";
+import type { SkillRegistry } from "../../services/skill-registry.js";
 
 type OpenDropdown = "provider" | "model" | null;
 
@@ -42,6 +44,7 @@ export class AuraInput extends LitElement {
   @property({ type: Number }) maxAttachmentSize = 10_485_760;
   @property({ type: Array }) allowedAttachmentTypes: string[] = [];
   @property({ type: Object }) providerManager: ProviderManager | null = null;
+  @property({ type: Object }) skillRegistry: SkillRegistry | null = null;
   @property({ type: String }) appId = "";
   @property({ type: Array }) suggestedPrompts: SuggestedPrompt[] = [];
 
@@ -52,6 +55,7 @@ export class AuraInput extends LitElement {
   @state() private pendingAttachments: Attachment[] = [];
   @state() private openDropdown: OpenDropdown = null;
   @state() private showPromptsPopup = false;
+  @state() private showSkillsPopup = false;
 
   @query(".chat-textarea") private inputEl!: HTMLTextAreaElement;
   @query("file-attachment") private fileAttachmentEl!: HTMLElement & {
@@ -101,13 +105,30 @@ export class AuraInput extends LitElement {
   }
 
   private _closeDropdownOnOutsideClick(e: MouseEvent): void {
-    if (!this.openDropdown) return;
     const path = e.composedPath();
-    const clickedInsideSelector = path.some(
-      (el) => el instanceof HTMLElement && el.closest?.(".selector-group"),
-    );
-    if (!clickedInsideSelector) {
-      this.openDropdown = null;
+    if (this.openDropdown) {
+      const clickedInsideSelector = path.some(
+        (el) => el instanceof HTMLElement && el.closest?.(".selector-group"),
+      );
+      if (!clickedInsideSelector) {
+        this.openDropdown = null;
+      }
+    }
+    if (this.showSkillsPopup) {
+      const clickedInsideSkills = path.some(
+        (el) => el instanceof HTMLElement && el.closest?.(".skills-button-wrapper"),
+      );
+      if (!clickedInsideSkills) {
+        this.showSkillsPopup = false;
+      }
+    }
+    if (this.showPromptsPopup) {
+      const clickedInsidePrompts = path.some(
+        (el) => el instanceof HTMLElement && el.closest?.(".idea-button-wrapper"),
+      );
+      if (!clickedInsidePrompts) {
+        this.showPromptsPopup = false;
+      }
     }
   }
 
@@ -240,6 +261,7 @@ export class AuraInput extends LitElement {
           </div>
           <div class="bottom-row_right">
             ${this._renderIdeaButton()}
+            ${this._renderSkillsButton()}
             ${this.loading
         ? html` <button
                   class="send-btn stop-btn"
@@ -275,25 +297,38 @@ export class AuraInput extends LitElement {
           part="idea-button"
           aria-label="Suggested prompts"
           title="Suggested prompts"
-          @mouseenter=${this._showPrompts}
-          @mouseleave=${this._scheduleHidePrompts}
           @click=${this._togglePrompts}
         >
           <md-icon>lightbulb</md-icon>
         </button>
         ${this.showPromptsPopup
         ? html`
-              <div
-                class="prompts-popup"
-                part="prompts-popup"
-                @mouseenter=${this._showPrompts}
-                @mouseleave=${this._scheduleHidePrompts}
-              >
-                <suggested-prompts
-                  .prompts=${this.suggestedPrompts}
-                  .label=${"Pick a prompt"}
-                  @prompt-selected=${this._handlePopupPromptSelected}
-                ></suggested-prompts>
+              <div class="skills-popup" part="prompts-popup">
+                <div class="skills-popup__header">
+                  <md-icon>lightbulb</md-icon>
+                  <span>Suggested Prompts</span>
+                  <button class="skills-popup__close" @click=${this._togglePrompts} aria-label="Close">
+                    <md-icon>close</md-icon>
+                  </button>
+                </div>
+                <div class="skills-popup__body">
+                  ${this.suggestedPrompts.map(
+          (p) => html`
+                      <div
+                        class="skills-popup__card skills-popup__card--action"
+                        @click=${() => this._selectPrompt(p)}
+                      >
+                        <div class="skills-popup__card-header">
+                          <md-icon>chat_bubble_outline</md-icon>
+                          <span class="skills-popup__card-name">${p.title}</span>
+                        </div>
+                        ${p.description
+              ? html`<p class="skills-popup__card-desc">${p.description}</p>`
+              : nothing}
+                      </div>
+                    `,
+        )}
+                </div>
               </div>
             `
         : nothing}
@@ -301,39 +336,72 @@ export class AuraInput extends LitElement {
     `;
   }
 
-  private _hideTimeout: ReturnType<typeof setTimeout> | null = null;
-
-  private _showPrompts(): void {
-    if (this._hideTimeout) {
-      clearTimeout(this._hideTimeout);
-      this._hideTimeout = null;
-    }
-    this.showPromptsPopup = true;
-  }
-
-  private _scheduleHidePrompts(): void {
-    this._hideTimeout = setTimeout(() => {
-      this.showPromptsPopup = false;
-      this._hideTimeout = null;
-    }, 200);
-  }
-
   private _togglePrompts(): void {
     this.showPromptsPopup = !this.showPromptsPopup;
   }
 
-  private _handlePopupPromptSelected(
-    e: CustomEvent<{ prompt: SuggestedPrompt }>,
-  ): void {
-    e.stopPropagation();
+  private _selectPrompt(prompt: SuggestedPrompt): void {
     this.showPromptsPopup = false;
     this.dispatchEvent(
       new CustomEvent("prompt-selected", {
         bubbles: true,
         composed: true,
-        detail: e.detail,
+        detail: { prompt },
       }),
     );
+  }
+
+  private _renderSkillsButton(): TemplateResult | typeof nothing {
+    if (!this.skillRegistry || this.loading) return nothing;
+    const skills = this.skillRegistry.getAllSkills();
+    const allTools = this.skillRegistry.getAllTools();
+    if (skills.length === 0 && allTools.length === 0) return nothing;
+
+    return html`
+      <div class="skills-button-wrapper">
+        <button
+          class="skills-btn"
+          part="skills-button"
+          aria-label="View registered skills & tools"
+          title="View registered skills & tools"
+          @click=${this._toggleSkillsPopup}
+        >
+          <md-icon>widgets</md-icon>
+        </button>
+        ${this.showSkillsPopup
+        ? html`
+              <div class="skills-popup" part="skills-popup">
+                <div class="skills-popup__header">
+                  <md-icon>widgets</md-icon>
+                  <span>Skill Registry</span>
+                  <button class="skills-popup__close" @click=${this._toggleSkillsPopup} aria-label="Close">
+                    <md-icon>close</md-icon>
+                  </button>
+                </div>
+                <div class="skills-popup__body">
+                  <aura-skill-list
+                    .skills=${skills}
+                    .tools=${allTools}
+                    .config=${{
+                      variant: "popup",
+                      selectionMode: "none",
+                      showSectionCounts: true,
+                      showSkillDescriptions: true,
+                      showToolDescriptions: true,
+                      showSkillToolChips: true,
+                      showConfirmationBadges: true,
+                    }}
+                  ></aura-skill-list>
+                </div>
+              </div>
+            `
+        : nothing}
+      </div>
+    `;
+  }
+
+  private _toggleSkillsPopup(): void {
+    this.showSkillsPopup = !this.showSkillsPopup;
   }
 
   private _renderProviderDropdown(): TemplateResult | typeof nothing {

@@ -6,29 +6,26 @@
   overflow: hidden;
   background: linear-gradient(
     180deg,
-    var(--aura-header-bg, #fafafa) 0%,
-    var(--aura-bg, #ffffff) 100%
+    var(--aura-header-bg) 0%,
+    var(--aura-bg) 100%
   );
-  color: var(--aura-color, var(--aura-fg, #1a1a1a));
-  font-family: var(
-    --aura-font-mono,
-    var(--aura-code-font, "Cascadia Code", "Fira Code", Consolas, monospace)
-  );
-  --aura-color: var(--aura-fg, #1a1a1a);
-  --monitor-border: var(--aura-border-color, #e5e7eb);
-  --monitor-border-soft: var(--aura-border-color, #e5e7eb);
-  --monitor-log-surface: var(--aura-input-bg, #ffffff);
+  color: var(--aura-color);
+  font-family: var(--aura-font-mono);
+  --aura-color: var(--aura-fg);
+  --monitor-border: var(--aura-border-color);
+  --monitor-border-soft: var(--aura-border-color);
+  --monitor-log-surface: var(--aura-input-bg);
   --monitor-bg-elevated: var(--monitor-log-surface);
-  --monitor-bg-hover: var(--aura-msg-user-bg, #f3f4f6);
-  --monitor-muted: var(--aura-muted-color, #6b7280);
-  --monitor-accent: var(--aura-accent, #187aba);
-  --monitor-info: #60a5fa;
-  --monitor-ai: #a78bfa;
-  --monitor-success: #22c55e;
-  --monitor-warn: #f59e0b;
-  --monitor-danger: var(--aura-msg-error-fg, #dc2626);
-  --monitor-debug: #94a3b8;
-  --monitor-skill: #14b8a6;
+  --monitor-bg-hover: var(--aura-msg-user-bg);
+  --monitor-muted: var(--aura-muted-color);
+  --monitor-accent: var(--aura-accent);
+  --monitor-info: var(--aura-info);
+  --monitor-ai: var(--aura-ai);
+  --monitor-success: var(--aura-success);
+  --monitor-warn: var(--aura-warning);
+  --monitor-danger: var(--aura-msg-error-fg);
+  --monitor-debug: var(--aura-debug);
+  --monitor-skill: var(--aura-skill);
 }
 
 :host,
@@ -83,8 +80,8 @@
 
 .clear-btn:hover {
   border-color: var(--monitor-accent);
-  color: var(--aura-color, var(--aura-fg, #1a1a1a));
-  background: var(--aura-msg-user-bg, #f3f4f6);
+  color: var(--aura-color);
+  background: var(--aura-msg-user-bg);
 }
 
 .event-toolbar {
@@ -95,7 +92,7 @@
   gap: 8px;
   padding: 7px 12px 8px;
   border-bottom: 1px solid var(--monitor-border-soft);
-  background: var(--aura-bg, #ffffff);
+  background: var(--aura-bg);
 }
 
 .filter-row {
@@ -130,8 +127,8 @@
   width: 100%;
   border: 1px solid var(--monitor-border);
   border-radius: 4px;
-  background: var(--aura-input-bg, #ffffff);
-  color: var(--aura-color, var(--aura-fg, #1a1a1a));
+  background: var(--aura-input-bg);
+  color: var(--aura-color);
   padding: 4px 8px;
   font-size: 11px;
   font-family: inherit;
@@ -168,7 +165,7 @@
   border: 1px solid var(--monitor-border);
   border-radius: 6px;
   background: var(--monitor-log-surface);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.14);
+  box-shadow: var(--aura-shadow-strong);
 }
 
 .filter-check {
@@ -181,7 +178,7 @@
   border: 1px solid transparent;
   border-radius: 4px;
   background: transparent;
-  color: var(--aura-color, var(--aura-fg, #1a1a1a));
+  color: var(--aura-color);
   font-size: 11px;
   cursor: pointer;
   user-select: none;
@@ -226,8 +223,8 @@
   min-width: 0;
   border: 1px solid var(--monitor-border);
   border-radius: 4px;
-  background: var(--aura-input-bg, #ffffff);
-  color: var(--aura-color, var(--aura-fg, #1a1a1a));
+  background: var(--aura-input-bg);
+  color: var(--aura-color);
   padding: 4px 8px;
   font-size: 11px;
   font-family: inherit;
@@ -401,7 +398,7 @@
 .event-summary {
   min-width: 0;
   flex: 1 1 320px;
-  color: var(--aura-color, var(--aura-fg, #1a1a1a));
+  color: var(--aura-color);
   overflow: visible;
   text-overflow: clip;
   white-space: normal;

@@ -8,10 +8,11 @@ import type {
   McpServerConfig,
   Skill,
 } from "../../types/index.js";
-import { needsConfirmation } from "../../types/index.js";
 import styles from "./aura-settings.css?inline";
 import type { AuraTheme } from "../../themes/index.js";
 import "../aura-json-view/aura-json-view.js";
+import "../aura-skill-list/aura-skill-list.js";
+import "../aura-mcp-server-list/aura-mcp-server-list.js";
 
 @customElement("aura-settings")
 export class AuraSettings extends LitElement {
@@ -26,6 +27,7 @@ export class AuraSettings extends LitElement {
   @state() private enabledToolList = new Set<string>();
   @state() private _selectedTheme: string | null = null;
   @state() private _themeDropdownOpen = false;
+  @state() private _enableWebMcpValue: boolean | null = null;
 
   @state() private activeAgenticTab: 'general' | 'skills' | 'mcp' = 'general';
 
@@ -33,7 +35,10 @@ export class AuraSettings extends LitElement {
   @state() private mcpServerFetchedTools = new Map<string, AuraTool[]>();
   @state() private mcpServerLoadingTools = new Set<string>();
   @state() private mcpServerStatus = new Map<string, 'connecting' | 'connected' | 'reconnecting' | 'error'>();
-  @state() private mcpServerInfo = new Map<string, { name: string; version: string; instructions?: string }>();
+  @state() private mcpServerInfo = new Map<
+    string,
+    { name: string; version: string; description?: string; instructions?: string }
+  >();
   private _mcpReconnectTimers = new Map<string, ReturnType<typeof setTimeout>>();
   private _mcpInitialized = false;
 
@@ -267,7 +272,7 @@ export class AuraSettings extends LitElement {
     return this.config?.agent?.toolTimeout ?? 30_000;
   }
   private get _enableWebMcp(): boolean {
-    return this.config?.agent?.enableWebMcp ?? false;
+    return this._enableWebMcpValue ?? this.config?.agent?.enableWebMcp ?? false;
   }
 
   private val(id: string): string {
@@ -357,6 +362,9 @@ export class AuraSettings extends LitElement {
       this._toolsInitialized = true;
     }
     if (changed.has("config") && this.config) {
+      if (this._enableWebMcpValue === null) {
+        this._enableWebMcpValue = this.config.agent?.enableWebMcp ?? false;
+      }
       if (!this._mcpInitialized) {
         this.mcpServers = JSON.parse(JSON.stringify(this.config.agent?.mcpServers || []));
         this._mcpInitialized = true;
@@ -421,150 +429,28 @@ export class AuraSettings extends LitElement {
     this.enabledToolList = next;
   }
 
-  private isToolLockedBySkill(toolId: string): boolean {
-    return this._skills.some(
-      (s) =>
-        s.tools.includes(toolId) &&
-        s.tools.every((id) => this.enabledToolList.has(id)),
-    );
-  }
-
-  private getSkillsUsingTool(toolId: string): string[] {
-    return this._skills
-      .filter((s) => s.tools.includes(toolId))
-      .map((s) => s.name);
-  }
-
-  private renderToolItem(
-    tool: AuraTool,
-    lockedBySkill = false,
-  ): TemplateResult {
-    const enabled = this.enabledToolList.has(tool.name);
-    const disabled = lockedBySkill;
-    const skillNames = this.getSkillsUsingTool(tool.name);
-    const skillNote =
-      skillNames.length > 0
-        ? html`<br /><em>Used by skill: ${skillNames.join(", ")}</em>`
-        : nothing;
-
-    return html`
-      <div class="tool-item">
-        <input
-          type="checkbox"
-          .checked=${enabled}
-          ?disabled=${disabled}
-          @change=${() => this.toggleTool(tool.name)}
-        />
-        <span class="name-with-info">
-          <span class="tool-item__name">${tool.name}</span>
-          <span class="info-icon"
-            >i<span class="info-tooltip"
-              >${tool.description}${skillNote}</span
-            ></span
-          >
-        </span>
-        <span class="tool-item__badges">
-          ${needsConfirmation(tool)
-        ? html` <span class="tool-badge tool-badge--confirm"
-                >ask confirm<span class="info-tooltip"
-                  >Requires user confirmation before executing</span
-                ></span
-              >`
-        : nothing}
-        </span>
-      </div>
-    `;
-  }
-
   private renderSkillsTools(): TemplateResult {
-    if (this._tools.length === 0 && this._skills.length === 0) {
-      return html`<p class="tools-empty">No tools or skills registered.</p>`;
-    }
-
     return html`
-      <!-- Skills -->
-      ${this._skills.length > 0
-        ? html`
-            <div class="field">
-              <label>Skills</label>
-            </div>
-            ${this._skills.map((skill) => {
-          const skillTools = skill.tools
-            .map((id) => this._tools.find((t) => t.name === id))
-            .filter(Boolean) as AuraTool[];
-          const allEnabled = skill.tools.every((id) =>
-            this.enabledToolList.has(id),
-          );
-          return html`
-                <div class="skill-group">
-                  <div class="skill-group__header">
-                    <input
-                      type="checkbox"
-                      .checked=${allEnabled}
-                      @change=${() => this.toggleSkill(skill)}
-                    />
-                    <span class="name-with-info">
-                      <span class="skill-group__name">${skill.name}</span>
-                      <span class="info-icon"
-                        >i<span class="info-tooltip"
-                          >${skill.description}</span
-                        ></span
-                      >
-                    </span>
-                  </div>
-                  <div class="skill-group__tools">
-                    ${skillTools.map(
-            (t) => html`
-                        <div class="skill-group__tool-name">
-                          <span class="name-with-info">
-                            <span>${t.name}</span>
-                            <span class="info-icon"
-                              >i<span class="info-tooltip"
-                                >${t.description}</span
-                              ></span
-                            >
-                          </span>
-                          <span class="tool-item__badges">
-                            ${needsConfirmation(t)
-                ? html`<span
-                                  class="tool-badge tool-badge--confirm"
-                                  >ask confirm<span class="info-tooltip"
-                                    >Requires user confirmation before
-                                    executing</span
-                                  ></span
-                                >`
-                : nothing}
-                          </span>
-                        </div>
-                      `,
-          )}
-                  </div>
-                </div>
-              `;
-        })}
-          `
-        : nothing}
-      <!-- Tools -->
-      ${this._tools.length > 0
-        ? html`
-            <div class="field">
-              <label
-                >Tools
-                <span class="hint" style="display:inline; margin-left: 6px"
-                  >(${this.enabledToolList.size}/${this._tools.length}
-                  active)</span
-                ></label
-              >
-            </div>
-            <div class="skill-group">
-              <div class="skill-group__tools">
-                ${this._tools.map((t) =>
-          this.renderToolItem(t, this.isToolLockedBySkill(t.name)),
-        )}
-              </div>
-            </div>
-          `
-        : nothing}
+      <aura-skill-list
+        .skills=${this._skills}
+        .tools=${this._tools}
+        .enabledTools=${Array.from(this.enabledToolList)}
+        .config=${{
+          variant: "panel",
+          selectionMode: "skills-and-tools",
+          showSectionCounts: true,
+          showToolSummary: true,
+          showSkillDescriptions: true,
+          showToolDescriptions: true,
+          showSkillToolChips: true,
+          showConfirmationBadges: true,
+          lockToolsWhenSkillEnabled: true,
+        }}
+        @tool-toggle=${(event: CustomEvent<{ tool: AuraTool; enabled: boolean }>) =>
+          this.toggleTool(event.detail.tool.name)}
+        @skill-toggle=${(event: CustomEvent<{ skill: Skill; enabled: boolean }>) =>
+          this.toggleSkill(event.detail.skill)}
+      ></aura-skill-list>
     `;
   }
 
@@ -709,103 +595,28 @@ export class AuraSettings extends LitElement {
 
   private renderMcpServers(): TemplateResult {
     return html`
-      <div class="toggle" style="margin-bottom: 16px;">
-        <input
-          type="checkbox"
-          id="cfg-enableWebMcp"
-          .checked=${this._enableWebMcp}
-          ?disabled=${this.ro("enableWebMcp")}
-        />
-        <label for="cfg-enableWebMcp">Enable WebMCP Client Integration</label>
-      </div>
-
-      <div class="field">
-        <label>MCP Servers (SSE Transport)</label>
-        ${this.mcpServers.map(srv => {
-      const loading = this.mcpServerLoadingTools.has(srv.id);
-      const tools = this.mcpServerFetchedTools.get(srv.id) || [];
-      const disabledSet = new Set(srv.disabledTools || []);
-      return html`
-            <div class="skill-group" style="margin-bottom:12px;">
-              <div class="skill-group__header" style="display:flex; align-items:center; gap: 8px;">
-                <input type="checkbox" .checked=${srv.enabled} @change=${() => this.toggleMcpServer(srv.id)} style="margin: 0;"/>
-                <input type="text" .value=${srv.id} style="flex:0.3; min-width: 80px;" disabled />
-                <input type="text" .value=${srv.url} style="flex:0.7" disabled />
-                <span class="info-icon" style="margin-left: 4px;">
-                  i<span class="info-tooltip">
-                    ${(() => {
-          const info = this.mcpServerInfo.get(srv.id);
-          return html`
-                        <strong>ID:</strong> ${srv.id}<br/>
-                        <strong>URL:</strong> ${srv.url}<br/>
-                        <strong>Status:</strong> ${this.mcpServerStatus.get(srv.id) || 'unknown'}<br/>
-                        ${info ? html`
-                          <hr style="margin: 4px 0; border: 0; border-top: 1px solid rgba(255,255,255,0.2);"/>
-                          <strong>Server:</strong> ${info.name} (${info.version})<br/>
-                          ${info.description ? html`<strong>Description:</strong> ${info.description}<br/>` : nothing}
-                          ${info.instructions ? html`
-                            <div style="margin-top: 8px;">
-                              <strong>Instructions:</strong>
-                              <div style="margin-top: 4px; font-size: 11px; opacity: 0.9; white-space: pre-wrap;">${info.instructions}</div>
-                            </div>
-                          ` : nothing}
-                        ` : nothing}
-                      `;
-        })()}
-                  </span>
-                </span>
-                ${srv.enabled ? (() => {
-          const status = this.mcpServerStatus.get(srv.id);
-          let icon = 'help';
-          let title = 'Unknown status';
-          let color = '#9ca3af'; // gray
-          let extraClass = '';
-
-          if (status === 'connected') {
-            icon = 'check_circle';
-            title = 'Connected & tools loaded';
-            color = '#10b981';
-          } else if (status === 'error') {
-            icon = 'error';
-            title = 'Failed to connect. Retrying...';
-            color = '#ef4444';
-          } else if (status === 'reconnecting' || status === 'connecting') {
-            icon = 'sync';
-            title = status === 'connecting' ? 'Connecting to server...' : 'Reconnecting to server...';
-            color = '#f59e0b';
-            extraClass = 'status-blink';
-          }
-
-          return html`<md-icon class="mcp-status-icon ${extraClass}" style="font-size: 18px; color: ${color}; cursor: help;" title="${title}">${icon}</md-icon>`;
-        })() : nothing}
-              </div>
-              <div class="skill-group__tools" style="padding: 8px">
-                ${loading ? html`<p class="hint">Loading tools...</p>` : tools.length === 0 ? html`<p class="hint">No tools discovered</p>` : tools.map(t => {
-          const shortName = t.name.split(':').pop() || "";
-          return html`
-                    <div class="tool-item">
-                      <input type="checkbox" .checked=${!disabledSet.has(shortName)} @change=${() => this.toggleMcpTool(srv.id, shortName)} />
-                      <span class="name-with-info">
-                        <span class="tool-item__name">${shortName}</span>
-                        <span class="info-icon">
-                          i<span class="info-tooltip">
-                            <strong style="font-size: 13px; display: block; margin-bottom: 4px;">${t.name}</strong>
-                            <div style="margin-bottom: 12px; opacity: 0.9;">${t.description}</div>
-                            <strong>Input Schema:</strong>
-                            <div style="margin-top: 6px; background: rgba(0,0,0,0.2); border-radius: 4px; padding: 4px;">
-                              <aura-json-view .data=${t.inputSchema}></aura-json-view>
-                            </div>
-                          </span>
-                        </span>
-                      </span>
-                    </div>
-                  `
-        })}
-              </div>
-            </div>
-          `;
-    })}
-      </div>
+      <aura-mcp-server-list
+        .webMcpEnabled=${this._enableWebMcp}
+        .webMcpReadonly=${this.ro("enableWebMcp")}
+        .servers=${this.mcpServers}
+        .toolsByServer=${this.mcpServerFetchedTools}
+        .loadingServerIds=${this.mcpServerLoadingTools}
+        .statusByServer=${this.mcpServerStatus}
+        .infoByServer=${this.mcpServerInfo}
+        @webmcp-toggle=${(event: CustomEvent<{ enabled: boolean }>) => {
+          this._enableWebMcpValue = event.detail.enabled;
+        }}
+        @server-toggle=${(event: CustomEvent<{ serverId: string }>) => this.toggleMcpServer(event.detail.serverId)}
+        @server-tool-toggle=${(event: CustomEvent<{ serverId: string; toolName: string }>) =>
+          this.toggleMcpTool(event.detail.serverId, event.detail.toolName)}
+      ></aura-mcp-server-list>
+      <input
+        type="checkbox"
+        id="cfg-enableWebMcp"
+        .checked=${this._enableWebMcp}
+        ?disabled=${this.ro("enableWebMcp")}
+        hidden
+      />
     `;
   }
 
