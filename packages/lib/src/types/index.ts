@@ -34,6 +34,7 @@ export interface ProviderMessage {
   name?: string;
   toolCalls?: ToolCallRequest[];
   tool_calls?: ToolCallRequest[];
+  attachments?: Attachment[];
 }
 
 export interface ToolAnnotations {
@@ -513,11 +514,15 @@ export type SettingsFieldId =
   | "toolTimeout"
   | "confirmationTimeoutMs"
   | "enableWebMcp"
-  | "theme";
+  | "theme"
+  | "mcpServers"
+  | "skills";
 
 export interface SettingsModalConfig {
   readonly: boolean;
-  editableFields?: SettingsFieldId[];
+  editableFields?: string[];
+  includedFields?: string[];
+  excludedFields?: string[];
 }
 
 export interface AuraConfig {

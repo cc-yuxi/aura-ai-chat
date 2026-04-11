@@ -224,13 +224,37 @@
 
 .actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
   gap: 12px;
   padding: 16px;
   border-top: 1px solid var(--_border);
   background: #fff;
   position: sticky;
   bottom: 0;
+}
+
+.actions__left,
+.actions__right {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.btn-text {
+  background: none;
+  border: none;
+  color: var(--_accent);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.btn-text:hover {
+  background: rgba(24, 122, 186, 0.05);
 }
 
 .btn {

@@ -733,6 +733,9 @@ export class CommunicationManager {
         pm.name =
           (m.metadata?.["toolId"] as string | undefined) ?? undefined;
       }
+      if (m.attachments && m.attachments.length > 0) {
+        pm.attachments = m.attachments;
+      }
       msgs.push(pm);
     }
     return msgs;

@@ -1,4 +1,5 @@
 import type {
+  Attachment,
   ModelInfo,
   ProviderOptions,
   ProviderMessage,
@@ -98,12 +99,113 @@ function extractErrorMessage(payload: unknown): string | null {
   return null;
 }
 
+/**
+ * Returns true if the MIME type is a text-decodable format that can be
+ * sent as inline text to the model (e.g. plain text, CSV, JSON, code).
+ */
+function isTextMime(mime: string): boolean {
+  if (mime.startsWith("text/")) return true;
+  const textSubtypes = [
+    "application/json",
+    "application/xml",
+    "application/javascript",
+    "application/typescript",
+    "application/x-yaml",
+    "application/yaml",
+    "application/csv",
+    "application/sql",
+    "application/x-sh",
+    "application/xhtml+xml",
+    "application/ld+json",
+  ];
+  return textSubtypes.some((t) => mime.startsWith(t));
+}
+
+/**
+ * Try to decode a base64 string to UTF-8 text.
+ * Returns null if the data is not valid UTF-8 or decoding fails.
+ */
+function tryDecodeBase64(base64: string): string | null {
+  try {
+    const binary = atob(base64);
+    const bytes = Uint8Array.from(binary, (ch) => ch.charCodeAt(0));
+    return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Build multi-part content array for a user message with attachments.
+ * Images → image_url parts; text-decodable files → inline text parts;
+ * other binary files → metadata-only text description.
+ */
+function buildMultiPartContent(
+  text: string,
+  attachments: Attachment[],
+): Array<Record<string, unknown>> {
+  const parts: Array<Record<string, unknown>> = [];
+
+  // Always include the user's text first
+  if (text) {
+    parts.push({ type: "text", text });
+  }
+
+  for (const att of attachments) {
+    const mime = att.mimeType ?? att.type ?? "application/octet-stream";
+    const fileName = att.fileName ?? att.name ?? "attachment";
+
+    if (mime.startsWith("image/") && att.data) {
+      // Vision-capable models accept image_url with a data URI
+      parts.push({
+        type: "image_url",
+        image_url: { url: `data:${mime};base64,${att.data}` },
+      });
+    } else if (att.data) {
+      // Try to decode text-like files so the model can read the content
+      const decoded = isTextMime(mime) ? tryDecodeBase64(att.data) : null;
+      if (decoded !== null) {
+        parts.push({
+          type: "text",
+          text: `--- File: ${fileName} (${mime}) ---\n${decoded}\n--- End of file ---`,
+        });
+      } else {
+        // Binary file that can't be rendered as text – include base64
+        // with a header so the model knows what it is
+        parts.push({
+          type: "text",
+          text:
+            `--- File: ${fileName} (${mime}, ${att.size} bytes) [base64] ---\n` +
+            `${att.data}\n--- End of file ---`,
+        });
+      }
+    } else {
+      // No data available – just mention the file so the model is aware
+      parts.push({
+        type: "text",
+        text: `[Attached file: ${fileName} (${mime}, ${att.size} bytes) – content not available]`,
+      });
+    }
+  }
+
+  return parts;
+}
+
 function toCopilotMessages(messages: ProviderMessage[]): Array<Record<string, unknown>> {
   return messages.map((message) => {
     const toolCalls = message.tool_calls ?? message.toolCalls;
+
+    // If a user message has attachments, convert to multi-part content
+    const hasAttachments =
+      message.role === "user" &&
+      message.attachments &&
+      message.attachments.length > 0;
+
     return {
       role: message.role,
-      content: message.content,
+      content: hasAttachments
+        ? buildMultiPartContent(message.content, message.attachments!)
+        : message.content,
       name: message.name,
       tool_call_id: message.tool_call_id ?? message.toolCallId,
       tool_calls: toolCalls?.map((toolCall) => ({

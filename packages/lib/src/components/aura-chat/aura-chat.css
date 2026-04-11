@@ -529,6 +529,8 @@
   flex: 1;
   overflow-y: auto;
   background: var(--aura-bg, #fff);
+  display: flex;
+  flex-direction: column;
 }
 
 .settings-modal__body::-webkit-scrollbar {
@@ -546,73 +548,4 @@
 
 .settings-modal__body::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
-}
-
-.settings-modal__footer {
-  display: flex;
-  gap: 8px;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 16px;
-  border-top: 1px solid var(--aura-border-color, #e5e7eb);
-  flex-shrink: 0;
-}
-
-.settings-modal__footer-left {
-  display: flex;
-  gap: 6px;
-}
-
-.settings-modal__footer-right {
-  display: flex;
-  gap: 8px;
-}
-
-.settings-modal__footer button {
-  padding: 8px 20px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: inherit;
-}
-
-.settings-modal__footer .btn-toggle {
-  padding: 6px 12px;
-  background: var(--aura-input-bg, #fff);
-  color: var(--aura-muted-color, #6b7280);
-  border: 1px solid var(--aura-border-color, #d1d5db);
-  font-size: 12px;
-}
-
-.settings-modal__footer .btn-toggle:hover {
-  background: var(--aura-action-hover-bg, #f3f4f6);
-  color: var(--aura-action-hover-color, #1a1a1a);
-}
-
-.settings-modal__footer .btn-cancel {
-  background: var(--aura-input-bg, #fff);
-  color: var(--aura-muted-color, #6b7280);
-  border: 1px solid var(--aura-border-color, #d1d5db);
-}
-
-.settings-modal__footer .btn-cancel:hover {
-  background: var(--aura-action-hover-bg, #f9fafb);
-  color: var(--aura-action-hover-color, #1a1a1a);
-}
-
-.settings-modal__footer .btn-apply {
-  background: var(--aura-accent, #187aba);
-  color: #fff;
-  border: none;
-}
-
-.settings-modal__footer .btn-apply:hover {
-  background: var(--aura-accent-hover, #126a9e);
-}
-
-.settings-modal__footer .btn-apply:disabled {
-  background: var(--aura-border-color, #d1d5db);
-  color: var(--aura-muted-color, #9ca3af);
-  cursor: not-allowed;
-}
+}

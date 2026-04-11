@@ -71,25 +71,84 @@ export class AuraSettings extends LitElement {
       "showThinkingProcess",
       "toolTimeout",
       "enableWebMcp",
+      "enableTools",
     ],
   };
 
   private isFieldReadonly(fieldId: SettingsFieldId): boolean {
     if (!this.config?.settingsModalConfig?.readonly) return false;
-    return !this.config.settingsModalConfig.editableFields?.includes(fieldId);
+    const editableFields = this.config.settingsModalConfig.editableFields;
+    if (!editableFields || editableFields.length === 0) return true;
+
+    return !editableFields.some((pattern) => {
+      try {
+        return new RegExp(pattern, "i").test(fieldId);
+      } catch {
+        console.warn(`[aura-ai-chat] Invalid regex in editableFields: ${pattern}`);
+        return false;
+      }
+    });
   }
 
-  private isSectionReadonly(section: string): boolean {
-    if (!this.config?.settingsModalConfig?.readonly) return false;
+  private isFieldVisible(fieldId: SettingsFieldId): boolean {
+    const config = this.config?.settingsModalConfig;
+    if (!config) return true;
+
+    const { includedFields, excludedFields } = config;
+    let visible = true;
+
+    if (includedFields && includedFields.length > 0) {
+      visible = includedFields.some((pattern) => {
+        try {
+          return new RegExp(pattern, "i").test(fieldId);
+        } catch {
+          console.warn(`[aura-ai-chat] Invalid regex in includedFields: ${pattern}`);
+          return false;
+        }
+      });
+    }
+
+    if (visible && excludedFields && excludedFields.length > 0) {
+      const excluded = excludedFields.some((pattern) => {
+        try {
+          return new RegExp(pattern, "i").test(fieldId);
+        } catch {
+          console.warn(`[aura-ai-chat] Invalid regex in excludedFields: ${pattern}`);
+          return false;
+        }
+      });
+      if (excluded) visible = false;
+    }
+
+    return visible;
+  }
+
+  private vis(fieldId: SettingsFieldId): boolean {
+    return this.isFieldVisible(fieldId);
+  }
+
+  private ro(fieldId: SettingsFieldId): boolean {
+    return this.isFieldReadonly(fieldId);
+  }
+
+  private isSectionVisible(section: string): boolean {
     const fields = AuraSettings.SECTION_FIELDS[section];
-    return fields?.every((f) => this.isFieldReadonly(f)) ?? false;
+    if (!fields) return true;
+
+    // For sections with complex tabs/sub-content, we check if at least one field is visible
+    // OR if the special tab visibility fields (enableTools, enableWebMcp) are visible
+    return fields.some((f) => this.isFieldVisible(f));
   }
 
-  get isAllReadonly(): boolean {
-    if (!this.config?.settingsModalConfig?.readonly) return false;
-    return Object.values(AuraSettings.SECTION_FIELDS)
-      .flat()
-      .every((f) => this.isFieldReadonly(f));
+  get hasEditableFields(): boolean {
+    const allKnownFields = [
+      ...Object.values(AuraSettings.SECTION_FIELDS).flat(),
+      "mcpServers" as SettingsFieldId,
+      "skills" as SettingsFieldId,
+      "confirmationTimeoutMs" as SettingsFieldId,
+    ];
+
+    return allKnownFields.some((f) => this.vis(f) && !this.ro(f));
   }
 
   private get _tools(): AuraTool[] {
@@ -562,9 +621,9 @@ export class AuraSettings extends LitElement {
       clearTimeout(this._mcpReconnectTimers.get(srv.id)!);
       this._mcpReconnectTimers.delete(srv.id);
     }
-    
+
     if (this.mcpServerLoadingTools.has(srv.id) && !isRetry) return;
-    
+
     if (!isRetry) {
       this.mcpServerLoadingTools = new Set(this.mcpServerLoadingTools).add(srv.id);
     }
@@ -584,7 +643,7 @@ export class AuraSettings extends LitElement {
       const tools = await client.getTools();
       const info = client.getServerInfo();
       client.disconnect();
-      
+
       const updated = new Map(this.mcpServerFetchedTools);
       updated.set(srv.id, tools);
       this.mcpServerFetchedTools = updated;
@@ -594,23 +653,23 @@ export class AuraSettings extends LitElement {
         nextInfo.set(srv.id, info);
         this.mcpServerInfo = nextInfo;
       }
-      
+
       setStatus('connected');
-    } catch(err) {
+    } catch (err) {
       setStatus('error');
-      
+
       const timer = setTimeout(() => {
-         const latestSrv = this.mcpServers.find(s => s.id === srv.id);
-         if (latestSrv?.enabled) {
-            this.fetchMcpTools(latestSrv, true);
-         }
+        const latestSrv = this.mcpServers.find(s => s.id === srv.id);
+        if (latestSrv?.enabled) {
+          this.fetchMcpTools(latestSrv, true);
+        }
       }, 10000);
       this._mcpReconnectTimers.set(srv.id, timer);
     } finally {
       if (!isRetry) {
-         const nextLoading = new Set(this.mcpServerLoadingTools);
-         nextLoading.delete(srv.id);
-         this.mcpServerLoadingTools = nextLoading;
+        const nextLoading = new Set(this.mcpServerLoadingTools);
+        nextLoading.delete(srv.id);
+        this.mcpServerLoadingTools = nextLoading;
       }
     }
   }
@@ -663,10 +722,10 @@ export class AuraSettings extends LitElement {
       <div class="field">
         <label>MCP Servers (SSE Transport)</label>
         ${this.mcpServers.map(srv => {
-          const loading = this.mcpServerLoadingTools.has(srv.id);
-          const tools = this.mcpServerFetchedTools.get(srv.id) || [];
-          const disabledSet = new Set(srv.disabledTools || []);
-          return html`
+      const loading = this.mcpServerLoadingTools.has(srv.id);
+      const tools = this.mcpServerFetchedTools.get(srv.id) || [];
+      const disabledSet = new Set(srv.disabledTools || []);
+      return html`
             <div class="skill-group" style="margin-bottom:12px;">
               <div class="skill-group__header" style="display:flex; align-items:center; gap: 8px;">
                 <input type="checkbox" .checked=${srv.enabled} @change=${() => this.toggleMcpServer(srv.id)} style="margin: 0;"/>
@@ -675,8 +734,8 @@ export class AuraSettings extends LitElement {
                 <span class="info-icon" style="margin-left: 4px;">
                   i<span class="info-tooltip">
                     ${(() => {
-                      const info = this.mcpServerInfo.get(srv.id);
-                      return html`
+          const info = this.mcpServerInfo.get(srv.id);
+          return html`
                         <strong>ID:</strong> ${srv.id}<br/>
                         <strong>URL:</strong> ${srv.url}<br/>
                         <strong>Status:</strong> ${this.mcpServerStatus.get(srv.id) || 'unknown'}<br/>
@@ -692,38 +751,38 @@ export class AuraSettings extends LitElement {
                           ` : nothing}
                         ` : nothing}
                       `;
-                    })()}
+        })()}
                   </span>
                 </span>
                 ${srv.enabled ? (() => {
-                  const status = this.mcpServerStatus.get(srv.id);
-                  let icon = 'help';
-                  let title = 'Unknown status';
-                  let color = '#9ca3af'; // gray
-                  let extraClass = '';
-                  
-                  if (status === 'connected') {
-                    icon = 'check_circle';
-                    title = 'Connected & tools loaded';
-                    color = '#10b981';
-                  } else if (status === 'error') {
-                    icon = 'error';
-                    title = 'Failed to connect. Retrying...';
-                    color = '#ef4444';
-                  } else if (status === 'reconnecting' || status === 'connecting') {
-                    icon = 'sync';
-                    title = status === 'connecting' ? 'Connecting to server...' : 'Reconnecting to server...';
-                    color = '#f59e0b';
-                    extraClass = 'status-blink';
-                  }
-                  
-                  return html`<md-icon class="mcp-status-icon ${extraClass}" style="font-size: 18px; color: ${color}; cursor: help;" title="${title}">${icon}</md-icon>`;
-                })() : nothing}
+          const status = this.mcpServerStatus.get(srv.id);
+          let icon = 'help';
+          let title = 'Unknown status';
+          let color = '#9ca3af'; // gray
+          let extraClass = '';
+
+          if (status === 'connected') {
+            icon = 'check_circle';
+            title = 'Connected & tools loaded';
+            color = '#10b981';
+          } else if (status === 'error') {
+            icon = 'error';
+            title = 'Failed to connect. Retrying...';
+            color = '#ef4444';
+          } else if (status === 'reconnecting' || status === 'connecting') {
+            icon = 'sync';
+            title = status === 'connecting' ? 'Connecting to server...' : 'Reconnecting to server...';
+            color = '#f59e0b';
+            extraClass = 'status-blink';
+          }
+
+          return html`<md-icon class="mcp-status-icon ${extraClass}" style="font-size: 18px; color: ${color}; cursor: help;" title="${title}">${icon}</md-icon>`;
+        })() : nothing}
               </div>
               <div class="skill-group__tools" style="padding: 8px">
                 ${loading ? html`<p class="hint">Loading tools...</p>` : tools.length === 0 ? html`<p class="hint">No tools discovered</p>` : tools.map(t => {
-                   const shortName = t.name.split(':').pop() || "";
-                   return html`
+          const shortName = t.name.split(':').pop() || "";
+          return html`
                     <div class="tool-item">
                       <input type="checkbox" .checked=${!disabledSet.has(shortName)} @change=${() => this.toggleMcpTool(srv.id, shortName)} />
                       <span class="name-with-info">
@@ -741,11 +800,11 @@ export class AuraSettings extends LitElement {
                       </span>
                     </div>
                   `
-                })}
+        })}
               </div>
             </div>
           `;
-        })}
+    })}
       </div>
     `;
   }
@@ -759,6 +818,12 @@ export class AuraSettings extends LitElement {
       next.delete(section);
     }
     this.openSections = next;
+  }
+
+  private isSectionReadonly(section: string): boolean {
+    const fields = AuraSettings.SECTION_FIELDS[section];
+    if (!fields) return false;
+    return fields.every((f) => this.isFieldReadonly(f));
   }
 
   private lockIcon(section: string): TemplateResult | typeof nothing {
@@ -781,19 +846,17 @@ export class AuraSettings extends LitElement {
     `;
   }
 
-  private ro(fieldId: SettingsFieldId): boolean {
-    return this.isFieldReadonly(fieldId);
-  }
-
   override render(): TemplateResult {
     return html`
       <!-- IDENTITY -->
+      ${this.isSectionVisible("identity") ? html`
       <details
         class="section"
         @toggle=${(e: Event) => this.handleSectionToggle("identity", e)}
       >
         <summary>Identity ${this.sectionIcons("identity")}</summary>
         <div class="section__body">
+          ${this.vis("appId") ? html`
           <div class="field">
             <label>App ID</label>
             <input
@@ -802,7 +865,8 @@ export class AuraSettings extends LitElement {
               .value=${this._appId}
               ?disabled=${this.ro("appId")}
             />
-          </div>
+          </div>` : nothing}
+          ${this.vis("teamId") ? html`
           <div class="field">
             <label>Team ID</label>
             <input
@@ -811,7 +875,8 @@ export class AuraSettings extends LitElement {
               .value=${this._teamId}
               ?disabled=${this.ro("teamId")}
             />
-          </div>
+          </div>` : nothing}
+          ${this.vis("tenantId") ? html`
           <div class="field">
             <label>Tenant ID</label>
             <input
@@ -820,7 +885,8 @@ export class AuraSettings extends LitElement {
               .value=${this._tenantId}
               ?disabled=${this.ro("tenantId")}
             />
-          </div>
+          </div>` : nothing}
+          ${this.vis("userId") ? html`
           <div class="field">
             <label>User ID</label>
             <input
@@ -829,7 +895,8 @@ export class AuraSettings extends LitElement {
               .value=${this._userId}
               ?disabled=${this.ro("userId")}
             />
-          </div>
+          </div>` : nothing}
+          ${this.vis("aiName") ? html`
           <div class="field">
             <label>AI Name</label>
             <input
@@ -842,10 +909,11 @@ export class AuraSettings extends LitElement {
             <p class="hint">
               Display name for AI messages. Defaults to "AI Assistant".
             </p>
-          </div>
+          </div>` : nothing}
         </div>
-      </details>
+      </details>` : nothing}
 
+      ${this.isSectionVisible("appearance") ? html`
       <!-- APPEARANCE -->
       <details
         class="section"
@@ -853,6 +921,7 @@ export class AuraSettings extends LitElement {
       >
         <summary>Appearance ${this.sectionIcons("appearance")}</summary>
         <div class="section__body">
+          ${this.vis("headerTitle") ? html`
           <div class="field">
             <label>Title</label>
             <input
@@ -861,7 +930,8 @@ export class AuraSettings extends LitElement {
               .value=${this._headerTitle}
               ?disabled=${this.ro("headerTitle")}
             />
-          </div>
+          </div>` : nothing}
+          ${this.vis("headerIcon") ? html`
           <div class="field">
             <label>Icon (Material Symbol)</label>
             <input
@@ -871,7 +941,8 @@ export class AuraSettings extends LitElement {
               placeholder="auto (from provider)"
               ?disabled=${this.ro("headerIcon")}
             />
-          </div>
+          </div>` : nothing}
+          ${this.vis("theme") ? html`
           <div class="field">
             <label>Theme</label>
             <span class="theme-selector-group">
@@ -887,15 +958,15 @@ export class AuraSettings extends LitElement {
                 >
                 <md-icon class="chevron"
                   >${this._themeDropdownOpen
-        ? "expand_less"
-        : "expand_more"}</md-icon
+            ? "expand_less"
+            : "expand_more"}</md-icon
                 >
               </button>
               ${this._themeDropdownOpen
-        ? html`
+            ? html`
                     <div class="theme-selector-menu" role="listbox">
                       ${AuraSettings.THEME_OPTIONS.map(
-          (t) => html`
+              (t) => html`
                           <button
                             class="theme-selector-menu__item"
                             role="option"
@@ -905,12 +976,13 @@ export class AuraSettings extends LitElement {
                             ${t.label}
                           </button>
                         `,
-        )}
+            )}
                     </div>
                   `
-        : nothing}
+            : nothing}
             </span>
-          </div>
+          </div>` : nothing}
+          ${this.vis("welcomeTitle") ? html`
           <div class="field">
             <label>Welcome title</label>
             <input
@@ -919,7 +991,8 @@ export class AuraSettings extends LitElement {
               .value=${this._welcomeTitle}
               ?disabled=${this.ro("welcomeTitle")}
             />
-          </div>
+          </div>` : nothing}
+          ${this.vis("welcomeMessage") ? html`
           <div class="field">
             <label>Welcome message</label>
             <textarea
@@ -928,7 +1001,8 @@ export class AuraSettings extends LitElement {
               .value=${this._welcomeMessage}
               ?disabled=${this.ro("welcomeMessage")}
             ></textarea>
-          </div>
+          </div>` : nothing}
+          ${this.vis("inputPlaceholder") ? html`
           <div class="field">
             <label>Input placeholder</label>
             <input
@@ -937,7 +1011,8 @@ export class AuraSettings extends LitElement {
               .value=${this._inputPlaceholder}
               ?disabled=${this.ro("inputPlaceholder")}
             />
-          </div>
+          </div>` : nothing}
+          ${this.vis("enableAttachments") ? html`
           <div class="toggle">
             <input
               type="checkbox"
@@ -953,6 +1028,7 @@ export class AuraSettings extends LitElement {
             id="cfg-attachmentOptions"
             style="display: ${this._enableAttachments ? "flex" : "none"}"
           >
+            ${this.vis("maxAttachmentSize") ? html`
             <div class="field">
               <label>Max size (bytes)</label>
               <input
@@ -961,8 +1037,9 @@ export class AuraSettings extends LitElement {
                 .value=${String(this._maxAttachmentSize)}
                 ?disabled=${this.ro("maxAttachmentSize")}
               />
-            </div>
-          </div>
+            </div>` : nothing}
+          </div>` : nothing}
+          ${this.vis("loadingMessage") ? html`
           <div class="field">
             <label>Loading message</label>
             <input
@@ -972,7 +1049,8 @@ export class AuraSettings extends LitElement {
               placeholder="Thinking..."
               ?disabled=${this.ro("loadingMessage")}
             />
-          </div>
+          </div>` : nothing}
+          ${this.vis("errorMessage") ? html`
           <div class="field">
             <label>Error message</label>
             <input
@@ -982,7 +1060,8 @@ export class AuraSettings extends LitElement {
               placeholder="Something went wrong."
               ?disabled=${this.ro("errorMessage")}
             />
-          </div>
+          </div>` : nothing}
+          ${this.vis("retryLabel") ? html`
           <div class="field">
             <label>Retry label</label>
             <input
@@ -992,10 +1071,11 @@ export class AuraSettings extends LitElement {
               placeholder="Retry"
               ?disabled=${this.ro("retryLabel")}
             />
-          </div>
+          </div>` : nothing}
         </div>
-      </details>
+      </details>` : nothing}
 
+      ${this.isSectionVisible("providers") ? html`
       <!-- PROVIDERS -->
       <details
         class="section"
@@ -1005,6 +1085,7 @@ export class AuraSettings extends LitElement {
         <div class="section__body">
           <div class="provider-group">
             <div class="provider-group__label">GitHub Copilot</div>
+            ${this.vis("copilotRemember") ? html`
             <div class="toggle">
               <input
                 type="checkbox"
@@ -1013,16 +1094,17 @@ export class AuraSettings extends LitElement {
                 ?disabled=${this.ro("copilotRemember")}
               />
               <label for="cfg-copilotRemember">Remember token</label>
-            </div>
+            </div>` : nothing}
           </div>
         </div>
-      </details>
+      </details>` : nothing}
 
+      ${this.isSectionVisible("agenticIntelligence") ? html`
       <!-- AGENTIC INTELLIGENCE -->
       <details
         class="section"
         @toggle=${(e: Event) =>
-        this.handleSectionToggle("agenticIntelligence", e)}
+          this.handleSectionToggle("agenticIntelligence", e)}
       >
         <summary>
           Agentic Intelligence ${this.sectionIcons("agenticIntelligence")}
@@ -1030,11 +1112,14 @@ export class AuraSettings extends LitElement {
         <div class="section__body">
           <div class="tabs">
             <button class="tab-btn ${this.activeAgenticTab === 'general' ? 'active' : ''}" @click=${() => this.activeAgenticTab = 'general'}>General</button>
-            <button class="tab-btn ${this.activeAgenticTab === 'skills' ? 'active' : ''}" @click=${() => this.activeAgenticTab = 'skills'}>Skills & Tools</button>
-            <button class="tab-btn ${this.activeAgenticTab === 'mcp' ? 'active' : ''}" @click=${() => this.activeAgenticTab = 'mcp'}>MCP Servers</button>
+            ${this.vis("enableTools") ? html`
+            <button class="tab-btn ${this.activeAgenticTab === 'skills' ? 'active' : ''}" @click=${() => this.activeAgenticTab = 'skills'}>Skills & Tools</button>` : nothing}
+            ${this.vis("enableWebMcp") ? html`
+            <button class="tab-btn ${this.activeAgenticTab === 'mcp' ? 'active' : ''}" @click=${() => this.activeAgenticTab = 'mcp'}>MCP Servers</button>` : nothing}
           </div>
 
           ${this.activeAgenticTab === "general" ? html`
+            ${this.vis("systemPrompt") ? html`
             <div class="field">
               <label>System prompt</label>
               <textarea
@@ -1043,7 +1128,8 @@ export class AuraSettings extends LitElement {
                 .value=${this._systemPrompt}
                 ?disabled=${this.ro("systemPrompt")}
               ></textarea>
-            </div>
+            </div>` : nothing}
+            ${this.vis("safetyInstructions") ? html`
             <div class="field">
               <label>Safety instructions</label>
               <textarea
@@ -1052,7 +1138,8 @@ export class AuraSettings extends LitElement {
                 .value=${this._safetyInstructions}
                 ?disabled=${this.ro("safetyInstructions")}
               ></textarea>
-            </div>
+            </div>` : nothing}
+            ${this.vis("maxContextTokens") ? html`
             <div class="field">
               <label>Max context tokens</label>
               <input
@@ -1063,7 +1150,8 @@ export class AuraSettings extends LitElement {
                 step="256"
                 ?disabled=${this.ro("maxContextTokens")}
               />
-            </div>
+            </div>` : nothing}
+            ${this.vis("enableStreaming") ? html`
             <div class="toggle">
               <input
                 type="checkbox"
@@ -1072,7 +1160,8 @@ export class AuraSettings extends LitElement {
                 ?disabled=${this.ro("enableStreaming")}
               />
               <label for="cfg-enableStreaming">Enable streaming</label>
-            </div>
+            </div>` : nothing}
+            ${this.vis("maxIterations") ? html`
             <div class="field">
               <label>Max iterations</label>
               <input
@@ -1083,7 +1172,8 @@ export class AuraSettings extends LitElement {
                 max="50"
                 ?disabled=${this.ro("maxIterations")}
               />
-            </div>
+            </div>` : nothing}
+            ${this.vis("showThinkingProcess") ? html`
             <div class="toggle">
               <input
                 type="checkbox"
@@ -1092,7 +1182,8 @@ export class AuraSettings extends LitElement {
                 ?disabled=${this.ro("showThinkingProcess")}
               />
               <label for="cfg-showThinkingProcess">Show thinking process</label>
-            </div>
+            </div>` : nothing}
+            ${this.vis("toolTimeout") ? html`
             <div class="field">
               <label>Tool timeout (ms)</label>
               <input
@@ -1103,7 +1194,7 @@ export class AuraSettings extends LitElement {
                 step="1000"
                 ?disabled=${this.ro("toolTimeout")}
               />
-            </div>
+            </div>` : nothing}
           ` : nothing}
 
           ${this.activeAgenticTab === "mcp" ? html`
@@ -1114,17 +1205,29 @@ export class AuraSettings extends LitElement {
             ${this.renderSkillsTools()}
           ` : nothing}
         </div>
-      </details>
+      </details>` : nothing}
 
       ${this.showActions
         ? html`
             <div class="actions">
-              <button class="btn btn-secondary" @click=${this.handleCancel}>
-                ${this.cancelLabel}
-              </button>
-              <button class="btn btn-primary" @click=${this.handleApply}>
-                ${this.applyLabel}
-              </button>
+              <div class="actions__left">
+                <button class="btn-text" @click=${this.expandAll}>
+                  Expand All
+                </button>
+                <button class="btn-text" @click=${this.collapseAll}>
+                  Collapse All
+                </button>
+              </div>
+              <div class="actions__right">
+                <button class="btn btn-secondary" @click=${this.handleCancel}>
+                  ${this.hasEditableFields ? this.cancelLabel : "Close"}
+                </button>
+                ${this.hasEditableFields ? html`
+                  <button class="btn btn-primary" @click=${this.handleApply}>
+                    ${this.applyLabel}
+                  </button>
+                ` : nothing}
+              </div>
             </div>
           `
         : nothing}

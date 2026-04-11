@@ -91,6 +91,7 @@ export class AuraChat extends LitElement {
   @state() private settingsOpen = false;
   @state() private historyOpen = false;
 
+  @query("#settingsConfig") private settingsEl!: any;
   @query(".transcript") private transcriptEl!: HTMLDivElement;
   @query("aura-input") private chatInputEl!: AuraInput;
 
@@ -912,39 +913,6 @@ export class AuraChat extends LitElement {
     );
   }
 
-  private get settingsConfigEl() {
-    return this.shadowRoot?.getElementById("settingsConfig") as
-      | (HTMLElement & {
-        getValues(): unknown;
-        expandAll(): void;
-        collapseAll(): void;
-        isAllReadonly: boolean;
-      })
-      | null;
-  }
-
-  private handleSettingsExpandAll(): void {
-    this.settingsConfigEl?.expandAll();
-  }
-
-  private handleSettingsCollapseAll(): void {
-    this.settingsConfigEl?.collapseAll();
-  }
-
-  private handleSettingsApplyFromFooter(): void {
-    const configEl = this.settingsConfigEl;
-    if (!configEl) return;
-    const values = configEl.getValues();
-    this.settingsOpen = false;
-    this.dispatchEvent(
-      new CustomEvent("settings-apply", {
-        bubbles: true,
-        composed: true,
-        detail: values,
-      }),
-    );
-  }
-
   private renderSettingsModal(): TemplateResult {
     return html`
       <div
@@ -973,35 +941,10 @@ export class AuraChat extends LitElement {
               id="settingsConfig"
               data-theme=${this.getAttribute("data-theme") ?? "light"}
               .config=${this.config}
+              .showActions=${true}
               @settings-apply=${this.handleSettingsApply}
               @settings-cancel=${this.handleCloseSettings}
             ></aura-settings>
-          </div>
-          <div class="settings-modal__footer">
-            <div class="settings-modal__footer-left">
-              <button class="btn-toggle" @click=${this.handleSettingsExpandAll}>
-                Expand All
-              </button>
-              <button
-                class="btn-toggle"
-                @click=${this.handleSettingsCollapseAll}
-              >
-                Collapse All
-              </button>
-            </div>
-            <div class="settings-modal__footer-right">
-              <button class="btn-cancel" @click=${this.handleCloseSettings}>
-                Cancel
-              </button>
-              <button
-                class="btn-apply"
-                @click=${this.handleSettingsApplyFromFooter}
-                ?disabled=${this.config?.settingsModalConfig?.readonly &&
-      !this.config.settingsModalConfig.editableFields?.length}
-              >
-                Apply
-              </button>
-            </div>
           </div>
         </div>
       </div>
