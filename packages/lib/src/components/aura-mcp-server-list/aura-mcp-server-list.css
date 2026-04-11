@@ -1,20 +1,25 @@
+:host {
+  --_bg: var(--aura-bg);
+  --_fg: var(--aura-color);
+  --_muted: var(--aura-muted-color);
+  --_border: var(--aura-border-color);
+  --_accent: var(--aura-accent);
+  --_accent-contrast: var(--aura-tool-badge-color, var(--aura-accent));
+  --_card-bg: var(--aura-skill-card-bg, var(--aura-header-bg));
+  --_card-border: var(--aura-skill-card-border, var(--aura-border-color));
+  --_card-fg: var(--aura-skill-card-color, var(--aura-color));
+  --_badge-bg: var(--aura-tool-badge-bg, color-mix(in srgb, var(--_accent) 12%, var(--_bg)));
+  --_badge-fg: var(--aura-tool-badge-color, var(--_accent));
+  --_radius: var(--aura-radius, 8px);
+  --_shadow: var(--aura-shadow);
+  color: var(--_fg);
+  font-family: var(--aura-font-family, var(--aura-font-sans));
+}
+
 .mcp-server-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
-
-.mcp-server-list__toggle {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border: 1px solid #f0f2f5;
-  border-radius: 10px;
-  background: linear-gradient(180deg, #fcfcfd 0%, #fafafa 100%);
-  color: #1f2937;
-  font-size: 13px;
-  font-weight: 600;
 }
 
 .mcp-server-list__section {
@@ -32,13 +37,13 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #6b7280;
+  color: var(--_muted);
 }
 
 .mcp-server-list__section-header md-icon {
   font-size: 14px;
   --md-icon-size: 14px;
-  color: #9ca3af;
+  color: color-mix(in srgb, var(--_muted) 80%, var(--_bg));
 }
 
 .mcp-server-list__count {
@@ -49,13 +54,19 @@
   height: 18px;
   padding: 0 6px;
   border-radius: 999px;
-  background: #ede9fe;
-  color: #7c3aed;
+  background: var(--_badge-bg);
+  color: var(--_badge-fg);
   font-size: 10px;
   font-weight: 700;
   text-transform: none;
   letter-spacing: 0;
+}
+
+.mcp-server-list__header-actions {
   margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .mcp-server-list__card {
@@ -63,15 +74,20 @@
   flex-direction: column;
   gap: 10px;
   padding: 12px 14px;
-  border: 1px solid #f0f2f5;
-  border-radius: 10px;
-  background: linear-gradient(180deg, #fcfcfd 0%, #fafafa 100%);
+  border: 1px solid var(--_card-border);
+  border-radius: calc(var(--_radius) + 2px);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--_card-bg) 72%, var(--_bg)) 0%,
+    var(--_card-bg) 100%
+  );
+  color: var(--_card-fg);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .mcp-server-list__card:hover {
-  border-color: #e0e7ff;
-  box-shadow: 0 1px 4px rgba(124, 58, 237, 0.06);
+  border-color: color-mix(in srgb, var(--_accent) 24%, var(--_card-border));
+  box-shadow: var(--_shadow);
 }
 
 .mcp-server-list__card-top {
@@ -82,7 +98,7 @@
 
 .mcp-server-list__checkbox {
   margin-top: 2px;
-  accent-color: #7c3aed;
+  accent-color: var(--_accent);
 }
 
 .mcp-server-list__meta {
@@ -100,30 +116,57 @@
   min-width: 0;
 }
 
-.mcp-server-list__title-row md-icon {
+.mcp-server-list__title-row md-icon,
+.mcp-server-list__info md-icon {
   font-size: 14px;
   --md-icon-size: 14px;
-  color: #7c3aed;
+  color: var(--_accent);
   flex-shrink: 0;
 }
 
-.mcp-server-list__name {
+.mcp-server-list__name,
+.mcp-server-list__input {
   min-width: 0;
   flex: 1;
   font-size: 13px;
   font-weight: 600;
-  color: #1f2937;
+}
+
+.mcp-server-list__name {
+  color: var(--_card-fg);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.mcp-server-list__subtitle {
+.mcp-server-list__subtitle,
+.mcp-server-list__url-input {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--_muted);
+}
+
+.mcp-server-list__subtitle {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.mcp-server-list__input,
+.mcp-server-list__url-input {
+  width: 100%;
+  border: 1px solid var(--_card-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--_bg) 88%, var(--_card-bg));
+  color: var(--_fg);
+  padding: 7px 10px;
+  line-height: 1.4;
+}
+
+.mcp-server-list__input:focus,
+.mcp-server-list__url-input:focus {
+  outline: none;
+  border-color: var(--_accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--_accent) 14%, transparent);
 }
 
 .mcp-server-list__badges {
@@ -140,37 +183,64 @@
   gap: 4px;
   padding: 2px 7px;
   border-radius: 999px;
-  background: #f3f4f6;
-  color: #6b7280;
+  background: var(--_badge-bg);
+  color: var(--_badge-fg);
   font-size: 10px;
   font-weight: 600;
   white-space: nowrap;
 }
 
 .mcp-server-list__badge--connected {
-  background: #dcfce7;
-  color: #166534;
+  background: color-mix(in srgb, var(--aura-success) 18%, var(--_bg));
+  color: color-mix(in srgb, var(--aura-success) 72%, var(--_fg));
 }
 
 .mcp-server-list__badge--error {
-  background: #fee2e2;
-  color: #991b1b;
+  background: color-mix(in srgb, var(--aura-error) 18%, var(--_bg));
+  color: color-mix(in srgb, var(--aura-error) 72%, var(--_fg));
 }
 
 .mcp-server-list__badge--busy {
-  background: #fef3c7;
-  color: #92400e;
+  background: color-mix(in srgb, var(--aura-warning) 22%, var(--_bg));
+  color: color-mix(in srgb, var(--aura-warning) 72%, var(--_fg));
 }
 
-.mcp-server-list__badge md-icon {
-  font-size: 12px;
-  --md-icon-size: 12px;
+.mcp-server-list__badge md-icon,
+.mcp-server-list__icon-btn md-icon {
+  font-size: 14px;
+  --md-icon-size: 14px;
 }
 
-.mcp-server-list__tools {
+.mcp-server-list__icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid color-mix(in srgb, var(--_border) 75%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--_bg) 88%, var(--_card-bg));
+  color: var(--_muted);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.mcp-server-list__icon-btn:hover {
+  background: color-mix(in srgb, var(--_badge-bg) 50%, var(--_bg));
+  color: var(--_accent);
+}
+
+.mcp-server-list__icon-btn--danger:hover {
+  color: var(--aura-error);
+}
+
+.mcp-server-list__tools-group {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  border: 1px solid color-mix(in srgb, var(--_card-border) 88%, transparent);
+  border-radius: 10px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--_bg) 72%, var(--_card-bg));
 }
 
 .mcp-server-list__tool {
@@ -178,9 +248,10 @@
   align-items: flex-start;
   gap: 10px;
   padding: 10px 12px;
-  border: 1px solid #eef0f3;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.72);
+}
+
+.mcp-server-list__tool + .mcp-server-list__tool {
+  border-top: 1px solid color-mix(in srgb, var(--_border) 70%, transparent);
 }
 
 .mcp-server-list__tool-meta {
@@ -203,7 +274,7 @@
   flex: 1;
   font-size: 12px;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--_card-fg);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -212,10 +283,10 @@
 .mcp-server-list__hint {
   margin: 0;
   padding: 10px 12px;
-  border: 1px dashed #e5e7eb;
+  border: 1px dashed var(--_border);
   border-radius: 8px;
-  background: #fafafa;
-  color: #6b7280;
+  background: color-mix(in srgb, var(--_card-bg) 70%, var(--_bg));
+  color: var(--_muted);
   font-size: 12px;
 }
 
@@ -226,15 +297,10 @@
   width: 18px;
   height: 18px;
   border-radius: 999px;
-  background: #f3f4f6;
-  color: #6b7280;
+  background: color-mix(in srgb, var(--_badge-bg) 45%, var(--_bg));
+  color: var(--_muted);
   cursor: help;
   flex-shrink: 0;
-}
-
-.mcp-server-list__info md-icon {
-  font-size: 13px;
-  --md-icon-size: 13px;
 }
 
 .mcp-server-list__tooltip {
@@ -248,12 +314,12 @@
   overflow: auto;
   padding: 12px;
   border-radius: 10px;
-  background: #111827;
-  color: #f9fafb;
+  background: color-mix(in srgb, var(--_fg) 88%, var(--_bg));
+  color: var(--_bg);
   font-size: 11px;
   font-weight: 400;
   line-height: 1.5;
-  box-shadow: 0 12px 28px rgba(17, 24, 39, 0.24);
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--_fg) 24%, transparent);
   white-space: normal;
 }
 
@@ -279,7 +345,7 @@
   margin-top: 4px;
   padding: 6px 8px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.08);
+  background: color-mix(in srgb, var(--_bg) 12%, transparent);
 }
 
 .mcp-server-list__status-blink {

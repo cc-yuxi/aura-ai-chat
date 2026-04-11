@@ -9,14 +9,24 @@ import type {
   Skill,
 } from "../../types/index.js";
 import styles from "./aura-settings.css?inline";
-import type { AuraTheme } from "../../themes/index.js";
+import {
+  lightTheme,
+  darkTheme,
+  professionalLightTheme,
+  type AuraTheme,
+} from "../../themes/index.js";
 import "../aura-json-view/aura-json-view.js";
 import "../aura-skill-list/aura-skill-list.js";
 import "../aura-mcp-server-list/aura-mcp-server-list.js";
 
 @customElement("aura-settings")
 export class AuraSettings extends LitElement {
-  static override styles = [unsafeCSS(styles)];
+  static override styles = [
+    unsafeCSS(styles),
+    lightTheme,
+    darkTheme,
+    professionalLightTheme,
+  ];
 
   @property({ attribute: false }) config?: Partial<AuraConfig>;
   @property({ type: Boolean }) showActions = false;
@@ -593,30 +603,135 @@ export class AuraSettings extends LitElement {
     });
   }
 
+  private updateMcpServer(serverId: string, patch: Partial<McpServerConfig>) {
+    const previous = this.mcpServers.find((server) => server.id === serverId);
+    if (!previous) return;
+
+    const nextServer = { ...previous, ...patch };
+    const nextId = nextServer.id;
+    const serverIdentityChanged = previous.id !== nextId || previous.url !== nextServer.url;
+
+    this.mcpServers = this.mcpServers.map((server) =>
+      server.id === serverId ? nextServer : server,
+    );
+
+    if (!serverIdentityChanged) return;
+
+    const previousTools = this.mcpServerFetchedTools.get(serverId);
+    const previousStatus = this.mcpServerStatus.get(serverId);
+    const previousInfo = this.mcpServerInfo.get(serverId);
+    const previousLoading = this.mcpServerLoadingTools.has(serverId);
+
+    if (this._mcpReconnectTimers.has(serverId)) {
+      clearTimeout(this._mcpReconnectTimers.get(serverId)!);
+      this._mcpReconnectTimers.delete(serverId);
+    }
+
+    const nextFetchedTools = new Map(this.mcpServerFetchedTools);
+    const nextStatus = new Map(this.mcpServerStatus);
+    const nextInfo = new Map(this.mcpServerInfo);
+    const nextLoading = new Set(this.mcpServerLoadingTools);
+
+    nextFetchedTools.delete(serverId);
+    nextStatus.delete(serverId);
+    nextInfo.delete(serverId);
+    nextLoading.delete(serverId);
+
+    if (nextId) {
+      if (previousTools) nextFetchedTools.set(nextId, previousTools);
+      if (previousStatus) nextStatus.set(nextId, previousStatus);
+      if (previousInfo) nextInfo.set(nextId, previousInfo);
+      if (previousLoading) nextLoading.add(nextId);
+    }
+
+    this.mcpServerFetchedTools = nextFetchedTools;
+    this.mcpServerStatus = nextStatus;
+    this.mcpServerInfo = nextInfo;
+    this.mcpServerLoadingTools = nextLoading;
+
+    if (previous.id !== nextId && this._mcpReconnectTimers.has(nextId)) {
+      clearTimeout(this._mcpReconnectTimers.get(nextId)!);
+      this._mcpReconnectTimers.delete(nextId);
+    }
+
+    if (nextServer.enabled && nextServer.id && nextServer.url) {
+      void this.fetchMcpTools(nextServer);
+    }
+  }
+
+  private addMcpServer() {
+    const baseId = "new-server";
+    let counter = 1;
+    let nextId = `${baseId}-${counter}`;
+    const existingIds = new Set(this.mcpServers.map((server) => server.id));
+    while (existingIds.has(nextId)) {
+      counter += 1;
+      nextId = `${baseId}-${counter}`;
+    }
+
+    this.mcpServers = [
+      ...this.mcpServers,
+      {
+        id: nextId,
+        url: "https://",
+        enabled: false,
+        disabledTools: [],
+      },
+    ];
+  }
+
+  private removeMcpServer(serverId: string) {
+    this.mcpServers = this.mcpServers.filter((server) => server.id !== serverId);
+
+    if (this._mcpReconnectTimers.has(serverId)) {
+      clearTimeout(this._mcpReconnectTimers.get(serverId)!);
+      this._mcpReconnectTimers.delete(serverId);
+    }
+
+    const nextFetchedTools = new Map(this.mcpServerFetchedTools);
+    const nextStatus = new Map(this.mcpServerStatus);
+    const nextInfo = new Map(this.mcpServerInfo);
+    const nextLoading = new Set(this.mcpServerLoadingTools);
+    nextFetchedTools.delete(serverId);
+    nextStatus.delete(serverId);
+    nextInfo.delete(serverId);
+    nextLoading.delete(serverId);
+    this.mcpServerFetchedTools = nextFetchedTools;
+    this.mcpServerStatus = nextStatus;
+    this.mcpServerInfo = nextInfo;
+    this.mcpServerLoadingTools = nextLoading;
+  }
+
   private renderMcpServers(): TemplateResult {
     return html`
+      <div class="toggle" style="margin-bottom: 16px;">
+        <input
+          type="checkbox"
+          id="cfg-enableWebMcp"
+          .checked=${this._enableWebMcp}
+          @change=${(event: Event) => {
+            this._enableWebMcpValue = (event.target as HTMLInputElement).checked;
+          }}
+          ?disabled=${this.ro("enableWebMcp")}
+        />
+        <label for="cfg-enableWebMcp">Enable WebMCP Client Integration</label>
+      </div>
+
       <aura-mcp-server-list
-        .webMcpEnabled=${this._enableWebMcp}
-        .webMcpReadonly=${this.ro("enableWebMcp")}
         .servers=${this.mcpServers}
         .toolsByServer=${this.mcpServerFetchedTools}
         .loadingServerIds=${this.mcpServerLoadingTools}
         .statusByServer=${this.mcpServerStatus}
         .infoByServer=${this.mcpServerInfo}
-        @webmcp-toggle=${(event: CustomEvent<{ enabled: boolean }>) => {
-          this._enableWebMcpValue = event.detail.enabled;
-        }}
         @server-toggle=${(event: CustomEvent<{ serverId: string }>) => this.toggleMcpServer(event.detail.serverId)}
+        @server-update=${(event: CustomEvent<{ serverId: string; patch: Partial<McpServerConfig> }>) =>
+          this.updateMcpServer(event.detail.serverId, event.detail.patch)}
+        @server-add=${this.addMcpServer}
+        @server-remove=${(event: CustomEvent<{ serverId: string }>) =>
+          this.removeMcpServer(event.detail.serverId)}
         @server-tool-toggle=${(event: CustomEvent<{ serverId: string; toolName: string }>) =>
           this.toggleMcpTool(event.detail.serverId, event.detail.toolName)}
       ></aura-mcp-server-list>
-      <input
-        type="checkbox"
-        id="cfg-enableWebMcp"
-        .checked=${this._enableWebMcp}
-        ?disabled=${this.ro("enableWebMcp")}
-        hidden
-      />
     `;
   }
 

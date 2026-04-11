@@ -312,22 +312,11 @@ export class AuraInput extends LitElement {
                   </button>
                 </div>
                 <div class="skills-popup__body">
-                  ${this.suggestedPrompts.map(
-          (p) => html`
-                      <div
-                        class="skills-popup__card skills-popup__card--action"
-                        @click=${() => this._selectPrompt(p)}
-                      >
-                        <div class="skills-popup__card-header">
-                          <md-icon>chat_bubble_outline</md-icon>
-                          <span class="skills-popup__card-name">${p.title}</span>
-                        </div>
-                        ${p.description
-              ? html`<p class="skills-popup__card-desc">${p.description}</p>`
-              : nothing}
-                      </div>
-                    `,
-        )}
+                  <suggested-prompts
+                    .prompts=${this.suggestedPrompts}
+                    .label=${"Suggested prompts"}
+                    @prompt-selected=${this._handlePromptSelected}
+                  ></suggested-prompts>
                 </div>
               </div>
             `
@@ -340,13 +329,13 @@ export class AuraInput extends LitElement {
     this.showPromptsPopup = !this.showPromptsPopup;
   }
 
-  private _selectPrompt(prompt: SuggestedPrompt): void {
+  private _handlePromptSelected(event: CustomEvent<{ prompt: SuggestedPrompt }>): void {
     this.showPromptsPopup = false;
     this.dispatchEvent(
       new CustomEvent("prompt-selected", {
         bubbles: true,
         composed: true,
-        detail: { prompt },
+        detail: event.detail,
       }),
     );
   }

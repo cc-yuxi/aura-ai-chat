@@ -193,9 +193,13 @@
   transition: all 0.2s;
 }
 
+.idea-btn md-icon {
+  color: inherit;
+}
+
 .idea-btn:hover {
-  background: color-mix(in srgb, var(--aura-warning) 20%, var(--aura-bg));
-  color: var(--aura-warning);
+  background: var(--aura-accent-light);
+  color: var(--aura-accent);
 }
 
 .prompts-popup {
@@ -278,9 +282,13 @@
   transition: all 0.2s;
 }
 
+.skills-btn md-icon {
+  color: inherit;
+}
+
 .skills-btn:hover {
-  background: color-mix(in srgb, var(--aura-ai) 18%, var(--aura-bg));
-  color: var(--aura-ai);
+  background: var(--aura-accent-light);
+  color: var(--aura-accent);
 }
 
 .skills-popup {
@@ -315,7 +323,7 @@
 .skills-popup__header md-icon {
   font-size: 18px;
   --md-icon-size: 18px;
-  color: var(--aura-ai);
+  color: var(--aura-accent);
 }
 
 .skills-popup__header span {
@@ -355,6 +363,26 @@
   gap: 6px;
 }
 
+.skills-popup__body suggested-prompts {
+  display: block;
+  width: 100%;
+}
+
+.skills-popup__body suggested-prompts::part(suggested-prompts) {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  width: 100%;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.skills-popup__body suggested-prompts::part(prompt-chip) {
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
+}
+
 .skills-popup__section {
   display: flex;
   flex-direction: column;
@@ -387,8 +415,8 @@
   height: 18px;
   padding: 0 5px;
   border-radius: 9px;
-  background: color-mix(in srgb, var(--aura-ai) 18%, var(--aura-bg));
-  color: var(--aura-ai);
+  background: var(--aura-accent-light);
+  color: var(--aura-accent);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0;
@@ -404,7 +432,7 @@
 }
 
 .skills-popup__card:hover {
-  border-color: color-mix(in srgb, var(--aura-ai) 24%, var(--aura-border-color));
+  border-color: color-mix(in srgb, var(--aura-accent) 24%, var(--aura-border-color));
   box-shadow: var(--aura-shadow);
 }
 
@@ -418,7 +446,7 @@
 .skills-popup__card-header md-icon {
   font-size: 14px;
   --md-icon-size: 14px;
-  color: var(--aura-ai);
+  color: var(--aura-accent);
 }
 
 .skills-popup__card-name {
@@ -461,8 +489,8 @@
   display: inline-block;
   padding: 1px 6px;
   border-radius: 4px;
-  background: color-mix(in srgb, var(--aura-info) 16%, var(--aura-bg));
-  color: var(--aura-info);
+  background: var(--aura-accent-light);
+  color: var(--aura-accent);
   font-size: 10px;
   font-weight: 500;
   white-space: nowrap;

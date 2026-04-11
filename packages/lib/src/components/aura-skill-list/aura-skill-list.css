@@ -4,12 +4,12 @@
   --_muted: var(--aura-muted-color);
   --_border: var(--aura-border-color);
   --_accent: var(--aura-accent);
-  --_accent-contrast: var(--aura-tool-badge-color, var(--aura-accent));
+  --_accent-contrast: var(--aura-accent);
   --_card-bg: var(--aura-skill-card-bg, var(--aura-header-bg));
   --_card-border: var(--aura-skill-card-border, var(--aura-border-color));
   --_card-fg: var(--aura-skill-card-color, var(--aura-color));
-  --_badge-bg: var(--aura-tool-badge-bg, color-mix(in srgb, var(--_accent) 12%, var(--_bg)));
-  --_badge-fg: var(--aura-tool-badge-color, var(--_accent));
+  --_badge-bg: var(--aura-accent-light, color-mix(in srgb, var(--_accent) 12%, var(--_bg)));
+  --_badge-fg: var(--_accent-contrast);
   --_radius: var(--aura-radius, 8px);
   --_shadow: var(--aura-shadow);
   color: var(--_fg);
