@@ -47,7 +47,7 @@
   position: relative;
   z-index: 1;
   color: var(--aura-text-tertiary);
-  filter: drop-shadow(0 0 2px var(--aura-bg-surface));
+  filter: drop-shadow(0 0 2px var(--aura-bg));
 }
 
 .timeline-icon--running {
@@ -277,7 +277,7 @@ aura-json-view {
   font-family: inherit;
   border: 1px solid var(--aura-border-color);
   border-radius: 6px;
-  background: var(--aura-bg-surface);
+  background: var(--aura-bg);
   color: var(--aura-text-primary);
   outline: none;
   transition: border-color 0.15s;

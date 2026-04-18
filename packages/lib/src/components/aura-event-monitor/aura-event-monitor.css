@@ -16,7 +16,7 @@
   --monitor-border-soft: var(--aura-border-color);
   --monitor-log-surface: var(--aura-input-bg);
   --monitor-bg-elevated: var(--monitor-log-surface);
-  --monitor-bg-hover: var(--aura-msg-user-bg);
+  --monitor-bg-hover: var(--aura-bg);
   --monitor-muted: var(--aura-muted-color);
   --monitor-accent: var(--aura-accent);
   --monitor-info: var(--aura-info);
@@ -81,7 +81,7 @@
 .clear-btn:hover {
   border-color: var(--monitor-accent);
   color: var(--aura-color);
-  background: var(--aura-msg-user-bg);
+  background: var(--aura-bg);
 }
 
 .event-toolbar {
