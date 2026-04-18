@@ -31,11 +31,9 @@ import type { EventBus } from "./event-bus.js";
 import {
   buildSystemPrompt,
   type SystemPromptArgs,
-  buildSkillSelectToolDef,
-  buildSkillSwitchToolDef,
+  buildSelectSkillsToolDef,
   buildAskUserToolDef,
-  SKILL_SELECT_TOOL_NAME,
-  SKILL_SWITCH_TOOL_NAME,
+  SELECT_SKILLS_TOOL_NAME,
   ASK_USER_TOOL_NAME,
 } from "./prompt-builder.js";
 import { trimToTokenBudget } from "./token-budget.js";
@@ -244,7 +242,7 @@ function extractAskUserQuestion(args: Record<string, unknown>): string {
 }
 
 export class CommunicationManager {
-  private activeSkill: Skill | null = null;
+  private activeSkills: Skill[] = [];
   private abortController: AbortController | null = null;
   private currentIterationMsg: ChatMessage | null = null;
 
@@ -310,7 +308,7 @@ export class CommunicationManager {
     eventBus.emit(AuraEventType.Debug, {
       message: "Starting agent iteration",
       iteration,
-      activeSkill: this.activeSkill?.name ?? null,
+      activeSkills: this.activeSkills.map((skill) => skill.name),
       conversationId: historyManager.getConversation().id,
     });
   }
@@ -354,8 +352,8 @@ export class CommunicationManager {
     for (const toolCall of response.toolCalls) {
       this.checkAborted(signal);
 
-      if (toolCall.id === SKILL_SELECT_TOOL_NAME || toolCall.id === SKILL_SWITCH_TOOL_NAME) {
-        await this.handleSkillSwitch(toolCall, iteration);
+      if (toolCall.id === SELECT_SKILLS_TOOL_NAME) {
+        await this.handleActiveSkillsUpdate(toolCall, iteration);
         continue;
       }
 
@@ -372,26 +370,41 @@ export class CommunicationManager {
     return true;
   }
 
-  private async handleSkillSwitch(
+  private async handleActiveSkillsUpdate(
     toolCall: ToolCallRequest,
     iteration: number,
   ): Promise<void> {
     const { skillManager, historyManager, eventBus } = this;
     const toolArgs = toolCall.arguments as Record<string, unknown>;
-    const skillName = String(toolArgs.skillName ?? toolArgs.skill_name ?? "none");
+    const mode = this.extractSkillUpdateMode(toolArgs);
+    const requestedSkillNames = this.extractSkillNames(toolArgs);
+    const nextActiveSkills = this.resolveActiveSkills(
+      skillManager,
+      requestedSkillNames,
+      mode,
+    );
 
-    this.activeSkill = skillName === "none"
-      ? null
-      : (skillManager.getSkill(skillName) ?? null);
+    this.activeSkills = nextActiveSkills;
+    const activeSkillNames = this.activeSkills.map((skill) => skill.name);
 
     eventBus.emit(AuraEventType.SkillSelected, {
-      skillName: skillName === "none" ? null : skillName,
+      skillNames: activeSkillNames,
+      mode,
     });
 
-    const step = await this.emitStep(iteration, "skill-select", `Selected skill "${skillName}"`);
+    const summary = activeSkillNames.length > 0
+      ? `Active skills (${mode}): ${activeSkillNames.join(", ")}`
+      : `Cleared active skills (${mode})`;
+    const step = await this.emitStep(iteration, "skill-select", summary);
     await this.completeStep(step);
 
-    const resultMsg = createToolResultMessage(toolCall, `Skill "${skillName}" activated.`);
+    const resultMsg = createToolResultMessage(
+      toolCall,
+      JSON.stringify({
+        mode,
+        activeSkills: activeSkillNames,
+      }),
+    );
     await historyManager.pushAndPersistMessage(resultMsg);
     this.callbacks.onMessagePushed();
   }
@@ -654,7 +667,7 @@ export class CommunicationManager {
   }
 
   reset(): void {
-    this.activeSkill = null;
+    this.activeSkills = [];
     this.currentIterationMsg = null;
     this.cancel();
   }
@@ -673,20 +686,21 @@ export class CommunicationManager {
     const { skillManager, config } = this;
     const allSkills = skillManager.getAllSkills();
     const askUserTool = buildAskUserToolDef();
+    const selectSkillsTool = buildSelectSkillsToolDef(
+      allSkills.map((s) => s.name),
+    );
 
-    if (this.activeSkill) {
-      const skillTools = skillManager.getToolDefinitionsForSkill(
-        this.activeSkill.name,
-      );
-      const switchTool = buildSkillSwitchToolDef(
-        allSkills.map((s) => s.name),
+    if (this.activeSkills.length > 0) {
+      const skillTools = skillManager.getToolDefinitionsForSkills(
+        this.activeSkills.map((skill) => skill.name),
       );
       return {
-        tools: [...skillTools, switchTool, askUserTool],
+        tools: [...skillTools, selectSkillsTool, askUserTool],
         systemPromptArgs: {
           appSystemPrompt: config.agent?.appSystemPrompt,
           resourceContents,
-          activeSkill: this.activeSkill,
+          activeSkills: this.activeSkills,
+          skills: skillManager.getSkillsSummary(),
           additionalSafetyInstructions:
             config.agent?.additionalSafetyInstructions,
         },
@@ -694,11 +708,8 @@ export class CommunicationManager {
     }
 
     if (allSkills.length > 0) {
-      const selectTool = buildSkillSelectToolDef(
-        allSkills.map((s) => s.name),
-      );
       return {
-        tools: [selectTool, askUserTool],
+        tools: [selectSkillsTool, askUserTool],
         systemPromptArgs: {
           appSystemPrompt: config.agent?.appSystemPrompt,
           resourceContents,
@@ -718,6 +729,67 @@ export class CommunicationManager {
           config.agent?.additionalSafetyInstructions,
       },
     };
+  }
+
+  private extractSkillNames(args: Record<string, unknown>): string[] {
+    const direct = args["skillNames"];
+    if (Array.isArray(direct)) {
+      return direct
+        .filter((value): value is string => typeof value === "string")
+        .map((value) => value.trim())
+        .filter(Boolean);
+    }
+
+    const skillName = args["skillName"] ?? args["skill_name"];
+    if (typeof skillName === "string" && skillName.trim()) {
+      return [skillName.trim()];
+    }
+
+    return [];
+  }
+
+  private extractSkillUpdateMode(
+    args: Record<string, unknown>,
+  ): "replace" | "add" | "remove" {
+    const mode = args["mode"];
+    if (mode === "add" || mode === "remove" || mode === "replace") {
+      return mode;
+    }
+
+    return "replace";
+  }
+
+  private resolveActiveSkills(
+    skillManager: SkillRegistry,
+    requestedSkillNames: string[],
+    mode: "replace" | "add" | "remove",
+  ): Skill[] {
+    const knownSkills = new Map(
+      skillManager.getAllSkills().map((skill) => [skill.name.trim().toLowerCase(), skill]),
+    );
+    const normalizeName = (name: string): string => name.trim().toLowerCase();
+    const requestedNames = Array.from(
+      new Set(requestedSkillNames.map(normalizeName).filter(Boolean)),
+    );
+
+    const currentNames = this.activeSkills
+      .map((skill) => normalizeName(skill.name))
+      .filter(Boolean);
+
+    let nextNames: string[];
+    if (mode === "add") {
+      nextNames = [...currentNames, ...requestedNames];
+    } else if (mode === "remove") {
+      const removeSet = new Set(requestedNames);
+      nextNames = currentNames.filter((name) => !removeSet.has(name));
+    } else {
+      nextNames = requestedNames;
+    }
+
+    const uniqueNames = Array.from(new Set(nextNames));
+    return uniqueNames
+      .map((name) => knownSkills.get(name))
+      .filter((skill): skill is Skill => Boolean(skill));
   }
 
   private buildProviderMessages(systemPrompt: string): ProviderMessage[] {

@@ -24,6 +24,7 @@
   "scripts": {
     "start": "vite",
     "build": "tsc && vite build",
+    "test": "npm run build && tsc -p tsconfig.test-runtime.json && node --test tests/*.test.mjs",
     "preview": "vite preview",
     "dev": "vite",
     "analyze": "cem analyze --litelement"

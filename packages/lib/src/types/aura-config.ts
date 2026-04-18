@@ -517,7 +517,7 @@ export interface McpServerConfig {
  * Configuration for the AI Agent behavior and tools.
  */
 export interface AuraAgentConfig {
-  /** Base instructions for the AI model. */
+  /** App-specific system instructions appended after Aura's built-in master prompt. */
   appSystemPrompt?: string;
   /** Contextual resources available to the agent. */
   resources?: AuraResource[];

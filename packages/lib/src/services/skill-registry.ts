@@ -55,11 +55,22 @@ export class SkillRegistry {
   getToolDefinitionsForSkill(skillName: string): ToolDefinition[] {
     const skill = this.getSkill(skillName);
     if (!skill) return [];
-    return skill.tools
-      .map<ToolDefinition | null>((toolName) => {
+    return this.getToolDefinitionsForSkills([skill.name]);
+  }
+
+  getToolDefinitionsForSkills(skillNames: string[]): ToolDefinition[] {
+    const defs: ToolDefinition[] = [];
+    const seen = new Set<string>();
+
+    for (const skillName of skillNames) {
+      const skill = this.getSkill(skillName);
+      if (!skill) continue;
+
+      for (const toolName of skill.tools) {
         const tool = this.getTool(toolName);
-        if (!tool) return null;
-        return {
+        if (!tool || seen.has(tool.name)) continue;
+        seen.add(tool.name);
+        defs.push({
           name: tool.name,
           description: tool.description,
           inputSchema: tool.inputSchema,
@@ -69,17 +80,19 @@ export class SkillRegistry {
             description: tool.description,
             parameters: tool.inputSchema,
           },
-        };
-      })
-      .filter((t): t is ToolDefinition => t !== null);
+        });
+      }
+    }
+
+    return defs;
   }
 
   getActiveToolDefinitions(): ToolDefinition[] {
     const defs: ToolDefinition[] = [];
     // Tools from skills
-    for (const skill of this.getAllSkills()) {
-      defs.push(...this.getToolDefinitionsForSkill(skill.name));
-    }
+    defs.push(
+      ...this.getToolDefinitionsForSkills(this.getAllSkills().map((skill) => skill.name)),
+    );
     
     // Global tools (not in any skill, like common MCP tools)
     const skillToolNames = new Set(this.getAllSkills().flatMap(s => s.tools));

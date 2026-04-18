@@ -315,9 +315,7 @@ export class AuraEventMonitorElement extends LitElement {
           `[Tool] ${String(payload["tool"] ?? "tool")} failed: ${String(payload["error"] ?? "")}`,
         );
       case AuraEventType.SkillSelected:
-        return this.toInlineText(
-          `[System] skill=${String(payload["skillName"] ?? "none")}`,
-        );
+        return this.toInlineText(`[System] ${this.formatSkillSummary(payload)}`);
       case AuraEventType.AgentLoopStarted:
       case AuraEventType.AgentLoopCompleted:
         return this.toInlineText(`[System] ${this.formatLoopSummary(payload)}`);
@@ -350,6 +348,21 @@ export class AuraEventMonitorElement extends LitElement {
     if (iterations != null) parts.push(`iterations=${iterations}`);
     if (durationMs != null) parts.push(`duration=${durationMs}ms`);
     return parts.join(" ");
+  }
+
+  private formatSkillSummary(payload: Record<string, unknown>): string {
+    const mode = String(payload["mode"] ?? "replace");
+    const skillNames = Array.isArray(payload["skillNames"])
+      ? payload["skillNames"]
+          .filter((value): value is string => typeof value === "string")
+          .filter(Boolean)
+      : [];
+
+    if (skillNames.length === 0) {
+      return `skills cleared (${mode})`;
+    }
+
+    return `skills(${mode})=${skillNames.join(", ")}`;
   }
 
   private formatConversationSummary(
