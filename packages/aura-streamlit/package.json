@@ -1,0 +1,18 @@
+{
+  "name": "aura-streamlit",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node ../../scripts/sync-package-versions.js && vite build --base ./",
+    "dev": "vite"
+  },
+  "dependencies": {
+    "aura-ai-chat": "workspace:*",
+    "streamlit-component-lib": "^2.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "vite": "^6.1.0"
+  }
+}

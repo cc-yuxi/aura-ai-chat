@@ -37,6 +37,8 @@ https://github.com/user-attachments/assets/f07f171a-8c15-4a9e-8d99-de253450327f
 
 | Path | Purpose |
 | --- | --- |
+| `packages/aura-streamlit/` | Python package that exposes Aura AI Chat as a Streamlit custom component |
+| `demos/streamlit/` | Streamlit host app demo for the `aura-streamlit` Python wrapper |
 | 📦 **`packages/lib/`** | Core `aura-ai-chat` library and the vanilla playground |
 | 🅰️ **`demos/angular/`** | Angular host app demo with tools, skills, previews, and dashboard workflows |
 | ⚛️ **`demos/react/`** | React host demo |
@@ -64,6 +66,7 @@ Run a framework demo:
 pnpm run demo angular
 pnpm run demo react
 pnpm run demo vue
+pnpm run demo streamlit
 ```
 
 Run all demos in parallel:
@@ -76,6 +79,12 @@ pnpm run demo
 
 ```bash
 npm install aura-ai-chat
+```
+
+## Install The Streamlit Package
+
+```bash
+pip install aura-streamlit
 ```
 
 ## Quick Start
@@ -207,6 +216,46 @@ npm install aura-ai-chat
 
 <aura-chat></aura-chat>
 ```
+
+## Streamlit Quick Start
+
+```python
+import aura_streamlit as aura_st
+
+config = {
+    "identity": {
+        "appMetadata": {
+            "appId": "streamlit-demo",
+            "teamId": "operations",
+            "userId": "user-42",
+        },
+        "aiName": "Aura",
+    },
+    "appearance": {
+        "headerTitle": "Aura",
+        "theme": "professional-light",
+    },
+    "agent": {
+        "enableStreaming": True,
+        "providers": [
+            {
+                "type": "built-in",
+                "id": "gitHubCopilot",
+                "config": {
+                    "rememberToken": True,
+                },
+            }
+        ],
+    },
+}
+
+aura_st.aura_chat(config, key="aura", height=760)
+```
+
+The Streamlit wrapper accepts the JSON-serializable subset of `AuraConfig`.
+Function-valued browser hooks such as custom JavaScript providers, tools, and
+conversation managers need a browser-side bridge and cannot be passed directly
+from Python.
 
 ## Configuration
 
@@ -440,7 +489,7 @@ The playground showcases:
 
 ## 📦 Build And Publish
 
-Build the library:
+Build the packages:
 
 ```bash
 pnpm run build
@@ -455,10 +504,14 @@ pnpm version
 pnpm release
 ```
 
+`pnpm version` syncs `aura-streamlit` to the same version as `aura-ai-chat`,
+and `pnpm release` publishes both packages with that shared version number.
+
 After publishing:
 
 ```bash
 npm install aura-ai-chat
+pip install aura-streamlit
 ```
 
 ## License

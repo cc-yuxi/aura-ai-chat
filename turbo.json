@@ -3,7 +3,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**"]
+      "outputs": ["dist/**", "src/aura_streamlit/frontend/**"]
     },
     "dev": {
       "dependsOn": ["^build"],

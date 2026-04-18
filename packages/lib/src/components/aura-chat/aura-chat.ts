@@ -399,15 +399,143 @@ export class AuraChat extends LitElement {
     };
   }
 
+  private renderCopilotPopupWaiting(popup: Window): void {
+    popup.document.title = "Connecting to GitHub Copilot...";
+    popup.document.body.innerHTML = `
+      <main style="font-family: system-ui, sans-serif; padding: 24px; line-height: 1.5;">
+        <h1 style="margin: 0 0 12px; font-size: 20px;">Opening GitHub Copilot sign-in...</h1>
+        <p style="margin: 0; color: #475569;">
+          Waiting for GitHub device login details from Aura.
+        </p>
+      </main>
+    `;
+  }
+
+  private renderCopilotPopupRedirect(popup: Window, url: string): void {
+    const escapedUrl = url.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+    popup.document.title = "Continue to GitHub Copilot";
+    popup.document.body.innerHTML = `
+      <main style="font-family: system-ui, sans-serif; padding: 24px; line-height: 1.5;">
+        <h1 style="margin: 0 0 12px; font-size: 20px;">Continue to GitHub</h1>
+        <p style="margin: 0 0 16px; color: #475569;">
+          If you are not redirected automatically, use the button below.
+        </p>
+        <p style="margin: 0 0 16px;">
+          <a
+            href="${escapedUrl}"
+            target="_self"
+            rel="noopener"
+            style="display: inline-block; padding: 10px 14px; border-radius: 10px; background: #0f172a; color: white; text-decoration: none;"
+          >Continue to GitHub Copilot</a>
+        </p>
+        <p style="margin: 0; color: #64748b; font-size: 14px; word-break: break-all;">
+          ${escapedUrl}
+        </p>
+      </main>
+    `;
+    popup.location.replace(url);
+  }
+
+  private renderCopilotPopupCopyFallback(
+    popup: Window,
+    userCode: string,
+    url: string,
+  ): void {
+    popup.document.title = "Copy code and continue";
+    popup.document.body.innerHTML = `
+      <main style="font-family: system-ui, sans-serif; padding: 24px; line-height: 1.5;">
+        <h1 style="margin: 0 0 12px; font-size: 20px;">Copy your GitHub device code</h1>
+        <p style="margin: 0 0 16px; color: #475569;">
+          Automatic clipboard copy was blocked in this embedded host. Use the button below,
+          then continue to GitHub.
+        </p>
+        <div style="margin: 0 0 16px; padding: 14px 16px; border-radius: 12px; background: #f8fafc; border: 1px solid #cbd5e1; font-size: 28px; font-weight: 700; letter-spacing: 0.12em;">
+          ${userCode}
+        </div>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px;">
+          <button id="copy-continue" style="padding: 10px 14px; border: 0; border-radius: 10px; background: #0f172a; color: white; cursor: pointer;">
+            Copy code and continue
+          </button>
+          <button id="continue-only" style="padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 10px; background: white; color: #0f172a; cursor: pointer;">
+            Continue without copying
+          </button>
+        </div>
+        <p id="copy-status" style="margin: 0; color: #64748b; font-size: 14px;">
+          You can also type the code manually on the GitHub page if clipboard access stays blocked.
+        </p>
+      </main>
+    `;
+
+    const copyContinueButton = popup.document.getElementById("copy-continue");
+    const continueOnlyButton = popup.document.getElementById("continue-only");
+    const copyStatus = popup.document.getElementById("copy-status");
+
+    copyContinueButton?.addEventListener("click", async () => {
+      try {
+        await popup.navigator.clipboard.writeText(userCode);
+        if (copyStatus) {
+          copyStatus.textContent = "Code copied. Opening GitHub...";
+        }
+      } catch {
+        if (copyStatus) {
+          copyStatus.textContent =
+            "Clipboard access is still blocked. GitHub will open and you can type the code manually.";
+        }
+      }
+      popup.location.href = url;
+    });
+
+    continueOnlyButton?.addEventListener("click", () => {
+      popup.location.href = url;
+    });
+  }
+
+  private focusAuraWindowAfterPopupOpen(popup: Window): void {
+    try {
+      popup.blur();
+    } catch {
+      // ignore focus failures
+    }
+
+    try {
+      window.focus();
+    } catch {
+      // ignore focus failures
+    }
+  }
+
+  private isEmbeddedHost(): boolean {
+    try {
+      return window.self !== window.top;
+    } catch {
+      return true;
+    }
+  }
+
   private async handleCopilotLogin(): Promise<void> {
     const copilot = this.activeProvider as GitHubCopilotProvider;
     if (!copilot) return;
+
+    let popup: Window | null = null;
+    if (this.isEmbeddedHost()) {
+      // Open the popup synchronously under the original user gesture. In
+      // embedded hosts like Streamlit, waiting for the async device-flow call
+      // before calling window.open usually causes the browser to block it.
+      popup = window.open("", "_blank", "popup,width=560,height=720");
+      if (popup) {
+        this.renderCopilotPopupWaiting(popup);
+        this.focusAuraWindowAfterPopupOpen(popup);
+      }
+    }
+
     copilot.setRememberToken(this.copilotRememberToken);
     try {
       const info = await copilot.login();
       this.copilotDeviceInfo = info;
+      let copiedCode = false;
       try {
         await navigator.clipboard.writeText(info.userCode);
+        copiedCode = true;
         this.copilotCodeCopied = true;
         setTimeout(() => {
           this.copilotCodeCopied = false;
@@ -415,8 +543,30 @@ export class AuraChat extends LitElement {
       } catch {
         // clipboard may fail
       }
-      window.open(this.getCopilotVerificationUrl(info), "_blank", "noopener");
+
+      const verificationUrl = this.getCopilotVerificationUrl(info);
+      if (popup && !popup.closed) {
+        if (copiedCode) {
+          this.renderCopilotPopupRedirect(popup, verificationUrl);
+        } else {
+          this.renderCopilotPopupCopyFallback(
+            popup,
+            info.userCode,
+            verificationUrl,
+          );
+        }
+        try {
+          popup.focus();
+        } catch {
+          // ignore focus failures
+        }
+      } else {
+        window.open(verificationUrl, "_blank", "noopener");
+      }
     } catch (err) {
+      if (popup && !popup.closed) {
+        popup.close();
+      }
       console.error("[aura-chat] Copilot login failed:", err);
       this.copilotLoginStatus = "error";
     }

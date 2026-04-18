@@ -1,15 +1,17 @@
 {
   "name": "aura-ai-chat-monorepo",
   "private": true,
+  "type": "module",
   "packageManager": "pnpm@10.32.1",
   "scripts": {
-    "build": "turbo run build --filter=aura-ai-chat",
+    "build": "node scripts/sync-package-versions.js && turbo run build --filter=./packages/*",
     "dev": "turbo run dev --filter=./packages/*",
     "demo": "node scripts/demo.js",
     "clean": "turbo run clean",
     "release": "node scripts/release.js",
     "changeset": "changeset",
-    "version": "changeset version"
+    "sync:versions": "node scripts/sync-package-versions.js",
+    "version": "changeset version && node scripts/sync-package-versions.js"
   },
   "devDependencies": {
     "@changesets/cli": "^2.30.0",

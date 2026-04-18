@@ -1,0 +1,2 @@
+include README.md
+recursive-include src/aura_streamlit/frontend *

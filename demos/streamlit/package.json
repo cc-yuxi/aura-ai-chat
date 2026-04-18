@@ -1,0 +1,9 @@
+{
+  "name": "@aura-ai-chat/demo-streamlit",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "python run_demo.py",
+    "build": "python -m py_compile app.py run_demo.py copilot_proxy.py"
+  }
+}

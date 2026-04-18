@@ -30,3 +30,7 @@ dist
 coverage
 .vscode
 .DS_Store
+__pycache__/
+*.egg-info/
+build/
+packages/aura-streamlit/src/aura_streamlit/frontend/
