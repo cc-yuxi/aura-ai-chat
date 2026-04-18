@@ -397,11 +397,11 @@ Set `agent.enableWebMcp = true` to enable WebMCP bridging.
 
 Current behavior:
 
-- Aura exports registered tools to `navigator.mcp` as `aura:<toolName>`
+- Aura exports registered tools to `navigator.modelContext` as `aura:<toolName>`
 - Aura imports compatible page-level MCP tools and exposes them to the agent
 - Exported tool annotations are derived from tool `title` and `risk`
 
-If `navigator.mcp` is unavailable, Aura quietly skips the bridge.
+If `navigator.modelContext` is unavailable, Aura quietly skips the bridge.
 
 ## Themes And Host Control
 
