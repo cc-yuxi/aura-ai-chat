@@ -7,7 +7,7 @@ import {
   type PropertyValues,
 } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import type { AgentStep } from "../../types/index.js";
+import type { AgentStep } from "../../types/agent-internals.js";
 import "@material/web/icon/icon.js";
 import "../aura-action-preview/aura-action-preview.js";
 import "../aura-json-view/aura-json-view.js";

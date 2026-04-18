@@ -5,7 +5,7 @@ import type {
   ProviderRequest,
   ProviderResponse,
   ProviderResponseChunk,
-} from "../types/index.js";
+} from "../types/aura-config.js";
 
 const SOLVING_PROTOCOL = `You are an autonomous agent that solves problems step-by-step.
 For every request:

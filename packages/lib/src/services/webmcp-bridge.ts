@@ -11,7 +11,7 @@ import type {
   WebMcpToolDefinition,
   WebMcpToolResult,
 } from "../types/webmcp.js";
-import { auraToMcpAnnotations } from "../types/index.js";
+import { auraToMcpAnnotations } from "../utils/mcp.js";
 
 type NavigatorWithMcp = Navigator & {
   mcp?: {

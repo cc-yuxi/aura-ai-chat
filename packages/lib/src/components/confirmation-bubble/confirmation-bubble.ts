@@ -1,6 +1,6 @@
 import { LitElement, html, unsafeCSS, type TemplateResult } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import type { ToolCallRequest } from "../../types/index.js";
+import type { ToolCallRequest } from "../../types/core-types.js";
 import styles from "./confirmation-bubble.css?inline";
 
 @customElement("confirmation-bubble")

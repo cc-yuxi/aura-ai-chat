@@ -1,12 +1,12 @@
 import type {
   AuraTool,
-  ToolCallRequest,
   ToolExecutionContext,
   AuraToolResult,
   ToolResultContent,
   TextContent,
   ToolCallLogEntry,
 } from "../types/index.js";
+import type { ToolCallRequest } from "../types/core-types.js";
 import type { SkillRegistry } from "./skill-registry.js";
 
 export function contentToModelText(

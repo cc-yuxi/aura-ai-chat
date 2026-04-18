@@ -2,8 +2,9 @@ import { LitElement, html, unsafeCSS, nothing, type TemplateResult } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import type {
   ChatMessage,
-  PendingAction,
 } from "../../types/index.js";
+import type { PendingAction } from "../../types/agent-internals.js";
+import { MessageRole } from "../../types/index.js";
 import styles from "./aura-messages.css?inline";
 import { renderBasicMarkdown, formatTimestamp } from "../../utils/helpers.js";
 import "../aura-action-preview/aura-action-preview.js";
@@ -40,7 +41,7 @@ export class AuraMessagesElement extends LitElement {
     }
 
     const hasToolCalls = !!(msg.toolCalls && msg.toolCalls.length > 0);
-    const isTool = msg.role === "tool";
+    const isTool = msg.role === MessageRole.Tool;
 
     // Intermediate assistant planning/tool-call messages are represented
     // in the iteration timeline instead of as standalone chat bubbles.
@@ -54,7 +55,7 @@ export class AuraMessagesElement extends LitElement {
       return html``;
     }
 
-    const isUser = msg.role === "user";
+    const isUser = msg.role === MessageRole.User;
     const isError = !!(
       msg.metadata?.["type"] === "error" || msg.metadata?.["isError"]
     );

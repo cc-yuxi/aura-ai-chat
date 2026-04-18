@@ -8,7 +8,7 @@ import {
 import { customElement, property, state } from "lit/decorators.js";
 import "@material/web/icon/icon.js";
 import styles from "./aura-history.css?inline";
-import type { AuraChatHistorySummary } from "../../types/index.js";
+import type { AuraChatHistorySummary } from "../../types/core-types.js";
 import { toAuraChatHistorySummaries } from "../../utils/histories.js";
 import type { HistoryManager } from "../../services/history-manager.js";
 

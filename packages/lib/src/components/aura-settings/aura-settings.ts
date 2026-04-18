@@ -2,12 +2,12 @@ import { LitElement, html, unsafeCSS, nothing, type TemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import type {
   AuraConfig,
-  SettingsFieldId,
   AuraTool,
   ProviderConfig,
   McpServerConfig,
   Skill,
 } from "../../types/index.js";
+import type { SettingsFieldId } from "../../types/settings.js";
 import styles from "./aura-settings.css?inline";
 import {
   lightTheme,

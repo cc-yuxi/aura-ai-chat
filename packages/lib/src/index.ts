@@ -1,28 +1,45 @@
+/**
+ * Public API barrel for `@aura/lib`.
+ *
+ * Design principle: a consumer only needs `AuraConfig` and the types it
+ * references. Everything else is internal orchestration.
+ *
+ * The only extras are:
+ *  - Provider implementations (`GitHubCopilotProvider`, `createProviders`)
+ *    so consumers can create instances to pass into `AuraAgentConfig.providers`.
+ *  - Theme objects (`lightTheme`, `darkTheme`, `professionalLightTheme`) to
+ *    pass into `AuraAppearanceConfig.theme`.
+ *  - `AuraEventMonitorElement` as an optional debug/audit component.
+ */
+
+// ── Side-effect registrations (register Web Components) ───────────────────
 import "./components/aura-chat/aura-chat.js";
 import "./components/aura-event-monitor/aura-event-monitor.js";
 
+// ── AuraConfig and all types it references ────────────────────────────────
+// These are the only types a consumer needs to configure the chat.
 export type {
+  // Root config — the single entry point
   AuraConfig,
   AuraIdentityConfig,
   AuraAppearanceConfig,
   AuraAgentConfig,
   AppMetadata,
+
+  // Provider config — shapes passed into AuraAgentConfig.providers
   AIProvider,
   ProviderConfig,
   BuiltInProviderConfig,
   CustomProviderConfig,
   ProviderOptions,
-  ProviderMessage,
-  ProviderRequest,
-  ProviderResponse,
-  ProviderResponseChunk,
-  ToolDefinition,
-  ToolCallRequest,
-  Skill,
+
+  // Tool contract — implement AuraTool to pass into AuraAgentConfig.tools
   AuraTool,
-  ToolExecutionContext,
   AuraToolResult,
+  ToolExecutionContext,
   ToolResultContent,
+  AuraToolRiskType,
+  // Content part types (return values inside AuraToolResult)
   TextContent,
   ImageContent,
   AudioContent,
@@ -31,100 +48,47 @@ export type {
   ContentAnnotations,
   TextResourceContents,
   BlobResourceContents,
-  ToolAnnotations,
-  AuraToolRiskType,
+
+  // Skill — passed into AuraAgentConfig.skills
+  Skill,
+
+  // Resource — passed into AuraAgentConfig.resources
   AuraResource,
+
+  // Conversation storage — implement IConversationManager for AuraAgentConfig.conversationManager
+  IConversationManager,
   ChatMessage,
   Conversation,
-  IConversationManager,
+  Attachment,
   ToolCallLogEntry,
+
+  // Event callback — used in AuraConfig.onAuraEvent
   AuraEvent,
+
+  // Appearance types
   SuggestedPrompt,
   RichContent,
-  MessageRoleType,
-  Attachment,
-  ModelInfo,
-  ActionStatusType,
-  PendingAction,
-  AgentStep,
-  AgentStepKindType,
-  AgentStepStatusType,
 } from "./types/index.js";
 
+// ── Runtime enums needed to work with the above types ─────────────────────
 export {
-  needsConfirmation,
-  auraToMcpAnnotations,
-  AuraEventType,
-  AuraToolRisk,
-  ActionStatus,
-  AgentStepKind,
-  AgentStepStatus,
-  MessageRole,
+  AuraEventType,   // compare event.type in onAuraEvent callback
+  AuraToolRisk,    // set tool.risk when implementing AuraTool
+  MessageRole,     // use when implementing IConversationManager
 } from "./types/index.js";
 
+// ── Components ────────────────────────────────────────────────────────────
+// AuraChat is the only component consumers embed directly.
 export { AuraChat } from "./components/aura-chat/aura-chat.js";
-export { AuraMcpServerListElement } from "./components/aura-mcp-server-list/aura-mcp-server-list.js";
-export { AuraMessagesElement } from "./components/aura-messages/aura-messages.js";
-export { AuraSkillListElement } from "./components/aura-skill-list/aura-skill-list.js";
-export { SuggestedPromptsElement } from "./components/suggested-prompts/suggested-prompts.js";
-export { ConfirmationBubbleElement } from "./components/confirmation-bubble/confirmation-bubble.js";
-export { FileAttachmentElement } from "./components/file-attachment/file-attachment.js";
-export { ActionPreviewElement } from "./components/aura-action-preview/aura-action-preview.js";
-export { AuraResultViewElement } from "./components/aura-result-view/aura-result-view.js";
-export { AuraAgentIterationElement } from "./components/aura-agent-iteration/aura-agent-iteration.js";
-export { AuraAgentStepElement } from "./components/aura-agent-step/aura-agent-step.js";
+// Optional debug/audit component.
 export { AuraEventMonitorElement } from "./components/aura-event-monitor/aura-event-monitor.js";
 
-export { SkillRegistry } from "./services/skill-registry.js";
-export {
-  ToolDispatcher,
-  contentToModelText,
-} from "./services/tool-dispatcher.js";
-export { ProviderManager } from "./services/provider-manager.js";
-export { CommunicationManager } from "./services/communication-manager.js";
-export type { OrchestratorCallbacks } from "./services/communication-manager.js";
-export {
-  WebMcpBridge,
-  ToolExporter,
-  ToolImporter,
-  supportsWebMcp,
-} from "./services/webmcp-bridge.js";
+// ── Provider implementations ──────────────────────────────────────────────
+// Consumers instantiate these and pass them into AuraConfig.agent.providers.
+export { createProviders, BaseProvider, GitHubCopilotProvider } from "./providers/index.js";
+export type { GitHubCopilotProviderConfig } from "./providers/index.js";
 
-export {
-  buildSystemPrompt,
-  buildSkillSelectToolDef,
-  buildSkillSwitchToolDef,
-  buildAskUserToolDef,
-  DEFAULT_MASTER_SYSTEM_PROMPT,
-  SKILL_SELECT_TOOL_NAME,
-  ASK_USER_TOOL_NAME,
-  SKILL_SWITCH_TOOL_NAME,
-} from "./services/prompt-builder.js";
-
-export {
-  estimateTokens,
-  estimateMessagesTokens,
-  trimToTokenBudget,
-} from "./services/tokenBudget.js";
-
-export {
-  createProviders,
-  getProviderById,
-  BaseProvider,
-  GitHubCopilotProvider,
-} from "./providers/index.js";
-
-export type {
-  CopilotLoginStatus,
-  DeviceFlowInfo,
-  GitHubCopilotProviderConfig,
-} from "./providers/index.js";
-
-export { EventBus, AUDIT_EVENT_NAME } from "./services/event-bus.js";
-
+// ── Themes ────────────────────────────────────────────────────────────────
+// Theme objects are passed into AuraConfig.appearance.theme.
 export type { AuraTheme } from "./themes/index.js";
-export {
-  lightTheme,
-  darkTheme,
-  professionalLightTheme,
-} from "./themes/index.js";
+export { lightTheme, darkTheme, professionalLightTheme } from "./themes/index.js";

@@ -1,4 +1,6 @@
-import type { ProviderMessage, ChatMessage } from "../types/index.js";
+import type { ProviderMessage } from "../types/aura-config.js";
+import type { ChatMessage } from "../types/index.js";
+import { MessageRole } from "../types/index.js";
 
 export interface TrimOptions {
   maxTokens: number;
@@ -12,7 +14,7 @@ export function estimateTokens(text: string): number {
 
 export function estimateMessagesTokens(messages: ProviderMessage[]): number {
   return messages.reduce((total, msg) => {
-    return total + estimateTokens(msg.content) + 4; // +4 for role/overhead
+    return total + estimateTokens(msg.content) + 4;
   }, 0);
 }
 
@@ -23,10 +25,10 @@ export class TokenBudgetService {
     maxBudget: number,
   ): Promise<ProviderMessage[]> {
     const messages: ProviderMessage[] = [
-      { role: "system", content: systemPrompt },
-      ...history.map((m) => ({
-        role: m.role as any,
-        content: m.content,
+      { role: MessageRole.System, content: systemPrompt },
+      ...history.map((message) => ({
+        role: message.role,
+        content: message.content,
       })),
     ];
 
@@ -41,21 +43,20 @@ export function trimToTokenBudget(
   const { maxTokens, estimator = estimateTokens } = options;
 
   let currentTokens = 0;
-  const systemMsg = messages.find((m) => m.role === "system");
+  const systemMsg = messages.find((message) => message.role === MessageRole.System);
   if (systemMsg) {
     currentTokens += estimator(systemMsg.content) + 4;
   }
 
   const result: ProviderMessage[] = systemMsg ? [systemMsg] : [];
-  const others = messages.filter((m) => m.role !== "system");
+  const others = messages.filter((message) => message.role !== MessageRole.System);
 
-  // Keep most recent messages first
   const keptOthers: ProviderMessage[] = [];
   for (let i = others.length - 1; i >= 0; i--) {
-    const msg = others[i];
-    const tokens = estimator(msg.content) + 4;
+    const message = others[i];
+    const tokens = estimator(message.content) + 4;
     if (currentTokens + tokens <= maxTokens) {
-      keptOthers.unshift(msg);
+      keptOthers.unshift(message);
       currentTokens += tokens;
     } else {
       break;

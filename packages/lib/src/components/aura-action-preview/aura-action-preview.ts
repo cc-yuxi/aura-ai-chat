@@ -1,10 +1,12 @@
 import { LitElement, html, unsafeCSS, nothing, type TemplateResult } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import type {
-  PendingAction,
-  ActionStatusType,
   ToolResultContent,
 } from "../../types/index.js";
+import type {
+  ActionStatusType,
+  PendingAction,
+} from "../../types/agent-internals.js";
 import styles from "./aura-action-preview.css?inline";
 import "../aura-json-view/aura-json-view.js";
 

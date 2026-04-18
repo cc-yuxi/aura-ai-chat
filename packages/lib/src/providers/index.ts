@@ -3,11 +3,7 @@ import { GitHubCopilotProvider } from "./github-copilot-provider.js";
 
 export { BaseProvider } from "./base-provider.js";
 export { GitHubCopilotProvider } from "./github-copilot-provider.js";
-export type {
-  CopilotLoginStatus,
-  DeviceFlowInfo,
-  GitHubCopilotProviderConfig,
-} from "./github-copilot-provider.js";
+export type { GitHubCopilotProviderConfig } from "./github-copilot-provider.js";
 
 export function createProviders(configs?: ProviderConfig[]): AIProvider[] {
   if (!configs) return [];
@@ -26,11 +22,4 @@ export function createProviders(configs?: ProviderConfig[]): AIProvider[] {
       return undefined;
     })
     .filter((provider): provider is AIProvider => Boolean(provider));
-}
-
-export function getProviderById(
-  providers: AIProvider[],
-  id: string,
-): AIProvider | undefined {
-  return providers.find((p) => p.id === id);
 }

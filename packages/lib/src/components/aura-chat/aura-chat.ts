@@ -12,13 +12,13 @@ import type {
   ChatMessage,
   SuggestedPrompt,
   Attachment,
-  ToolCallRequest,
   AIProvider,
   Conversation,
-  AgentStep,
   McpServerConfig,
 } from "../../types/index.js";
-import { AuraEventType } from "../../types/index.js";
+import type { ToolCallRequest } from "../../types/core-types.js";
+import type { AgentStep } from "../../types/agent-internals.js";
+import { AuraEventType, MessageRole } from "../../types/index.js";
 import {
   CopilotLoginStatus,
   DeviceFlowInfo,
@@ -561,7 +561,7 @@ export class AuraChat extends LitElement {
     const showThinking = this.config?.agent?.showThinkingProcess ?? true;
     return html`${this.messages
       .filter((m) => {
-        if (m.role === "system") return false;
+        if (m.role === MessageRole.System) return false;
         if (m.metadata?.["isIteration"] && !showThinking) {
           const steps = (m.metadata["agentSteps"] as AgentStep[]) ?? [];
           const hasWaitingApproval = steps.some(
@@ -1007,7 +1007,7 @@ export class AuraChat extends LitElement {
       if (err instanceof DOMException && err.name === "AbortError") {
         const cancelMsg: ChatMessage = {
           id: `msg_cancel_${Date.now()}`,
-          role: "assistant",
+          role: MessageRole.Assistant,
           content: "OK, I've stopped generating the response.",
           timestamp: Date.now(),
         };
@@ -1019,7 +1019,7 @@ export class AuraChat extends LitElement {
         this.eventBus?.emit(AuraEventType.Error, { error: errorObj });
         const errorMsg: ChatMessage = {
           id: `msg_error_${Date.now()}`,
-          role: "assistant",
+          role: MessageRole.Assistant,
           content: errorObj.message || "Something went wrong.",
           timestamp: Date.now(),
           metadata: { type: "error" },
@@ -1061,7 +1061,7 @@ export class AuraChat extends LitElement {
   private handleRetry(): void {
     const lastUser = [...this.messages]
       .reverse()
-      .find((m) => m.role === "user");
+      .find((m) => m.role === MessageRole.User);
     if (lastUser) {
       const idx = this.messages.lastIndexOf(lastUser);
       this.messages = this.messages.slice(0, idx);

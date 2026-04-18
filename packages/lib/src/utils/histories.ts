@@ -1,4 +1,5 @@
-import type { AuraChatHistorySummary, Conversation } from "../types/index.js";
+import type { AuraChatHistorySummary, Conversation } from "../types/core-types.js";
+import { MessageRole } from "../types/core-types.js";
 
 export interface ConversationSummary {
   id: string;
@@ -11,8 +12,8 @@ export function summarizeHistories(
   conversations: Conversation[],
 ): ConversationSummary[] {
   return conversations.map((c) => {
-    const nonSystem = c.messages.filter((m) => m.role !== "system");
-    const firstUser = nonSystem.find((m) => m.role === "user");
+    const nonSystem = c.messages.filter((m) => m.role !== MessageRole.System);
+    const firstUser = nonSystem.find((m) => m.role === MessageRole.User);
 
     let title =
       c.title || (firstUser ? firstUser.content.substring(0, 50) : "New Conversation");
@@ -33,8 +34,8 @@ export function toAuraChatHistorySummaries(
   conversations: Conversation[],
 ): AuraChatHistorySummary[] {
   return conversations.map((c) => {
-    const nonSystem = c.messages.filter((m) => m.role !== "system");
-    const firstUser = nonSystem.find((m) => m.role === "user");
+    const nonSystem = c.messages.filter((m) => m.role !== MessageRole.System);
+    const firstUser = nonSystem.find((m) => m.role === MessageRole.User);
     const last = nonSystem[nonSystem.length - 1];
 
     return {

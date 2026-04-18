@@ -1,6 +1,7 @@
 import { LitElement, html, unsafeCSS, nothing, type TemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import type { AgentStep, ChatMessage } from "../../types/index.js";
+import type { ChatMessage } from "../../types/index.js";
+import type { AgentStep } from "../../types/agent-internals.js";
 import "@material/web/icon/icon.js";
 import "../aura-agent-step/aura-agent-step.js";
 import styles from "./aura-agent-iteration.css?inline";

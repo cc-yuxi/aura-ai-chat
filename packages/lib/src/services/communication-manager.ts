@@ -2,20 +2,26 @@ import type {
   AuraConfig,
   Attachment,
   ChatMessage,
-  PendingAction,
-  ProviderMessage,
-  ProviderResponse,
   Skill,
-  ToolCallRequest,
-  ToolDefinition,
   ToolExecutionContext,
-  AgentStep,
-  AgentStepKindType,
   AuraTool,
   ToolResultContent,
   AuraResource,
 } from "../types/index.js";
-import { AuraEventType, needsConfirmation } from "../types/index.js";
+import type {
+  ProviderMessage,
+  ProviderResponse,
+  ToolDefinition,
+} from "../types/aura-config.js";
+import type { ToolCallRequest } from "../types/core-types.js";
+import type {
+  AgentStep,
+  AgentStepKindType,
+  PendingAction,
+} from "../types/agent-internals.js";
+import { AuraEventType, MessageRole } from "../types/index.js";
+import { needsConfirmation } from "../utils/mcp.js";
+
 import type { SkillRegistry } from "./skill-registry.js";
 import type { ToolDispatcher } from "./tool-dispatcher.js";
 import { contentToModelText } from "./tool-dispatcher.js";
@@ -32,7 +38,7 @@ import {
   SKILL_SWITCH_TOOL_NAME,
   ASK_USER_TOOL_NAME,
 } from "./prompt-builder.js";
-import { trimToTokenBudget } from "./tokenBudget.js";
+import { trimToTokenBudget } from "./token-budget.js";
 
 export interface OrchestratorCallbacks {
   onStepStart(step: AgentStep): void;
@@ -60,7 +66,7 @@ function createUserMessage(
 ): ChatMessage {
   return {
     id: `msg_user_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-    role: "user",
+    role: MessageRole.User,
     content: text,
     timestamp: Date.now(),
     attachments: attachments?.length ? attachments : undefined,
@@ -70,7 +76,7 @@ function createUserMessage(
 function createAssistantMessage(content: string | null): ChatMessage {
   return {
     id: `msg_asst_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-    role: "assistant",
+    role: MessageRole.Assistant,
     content: content ?? "",
     timestamp: Date.now(),
   };
@@ -81,7 +87,7 @@ function createAssistantMessageWithToolCalls(
 ): ChatMessage {
   return {
     id: `msg_asst_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-    role: "assistant",
+    role: MessageRole.Assistant,
     content: response.content ?? "",
     timestamp: Date.now(),
     toolCalls: response.toolCalls,
@@ -95,7 +101,7 @@ function createToolResultMessage(
 ): ChatMessage {
   const msg: ChatMessage = {
     id: `msg_tool_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-    role: "tool",
+    role: MessageRole.Tool,
     content: resultContent,
     timestamp: Date.now(),
     toolCallId: toolCall.callId,
@@ -117,7 +123,7 @@ function createToolResultMessage(
 function createIterationMessage(iterationNumber: number): ChatMessage {
   return {
     id: `msg_iter_${iterationNumber}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-    role: "assistant",
+    role: MessageRole.Assistant,
     content: "",
     timestamp: Date.now(),
     metadata: {
@@ -716,13 +722,13 @@ export class CommunicationManager {
 
   private buildProviderMessages(systemPrompt: string): ProviderMessage[] {
     const msgs: ProviderMessage[] = [
-      { role: "system", content: systemPrompt },
+      { role: MessageRole.System, content: systemPrompt },
     ];
     for (const m of this.historyManager.getMessages()) {
       if (m.metadata?.["isIteration"]) continue;
 
       const pm: ProviderMessage = {
-        role: m.role as ProviderMessage["role"],
+        role: m.role,
         content: m.content,
       };
       if (m.toolCalls && m.toolCalls.length > 0) {

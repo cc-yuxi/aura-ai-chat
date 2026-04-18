@@ -9,10 +9,10 @@ import {
 import { customElement, property, state, query } from "lit/decorators.js";
 import type {
   Attachment,
-  ModelInfo,
   AIProvider,
   SuggestedPrompt,
 } from "../../types/index.js";
+import type { ModelInfo } from "../../types/aura-config.js";
 import {
   loadUserSelectedModel,
   loadUserSelectedProvider,

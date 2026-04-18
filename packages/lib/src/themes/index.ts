@@ -1,10 +1,8 @@
-import { lightTheme } from "./light.css.js";
 import { darkTheme } from "./dark.css.js";
+import { lightTheme } from "./light.css.js";
 import { professionalLightTheme } from "./professional-light.css.js";
 
-export { lightTheme } from "./light.css.js";
-export { darkTheme } from "./dark.css.js";
-export { professionalLightTheme } from "./professional-light.css.js";
+export { lightTheme, darkTheme, professionalLightTheme };
 
 export type AuraTheme = "light" | "dark" | "professional-light" | "auto";
 

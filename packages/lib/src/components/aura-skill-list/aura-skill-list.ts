@@ -3,7 +3,7 @@ import { customElement, property } from "lit/decorators.js";
 import "@material/web/icon/icon.js";
 import styles from "./aura-skill-list.css?inline";
 import type { AuraTool, Skill } from "../../types/index.js";
-import { needsConfirmation } from "../../types/index.js";
+import { needsConfirmation } from "../../utils/mcp.js";
 
 export interface AuraSkillListConfig {
   variant?: "popup" | "panel";

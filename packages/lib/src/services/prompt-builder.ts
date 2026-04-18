@@ -1,4 +1,5 @@
-import type { Skill, ToolDefinition } from "../types/index.js";
+import type { Skill } from "../types/index.js";
+import type { ToolDefinition } from "../types/aura-config.js";
 
 export const DEFAULT_MASTER_SYSTEM_PROMPT = `You are a helpful AI assistant embedded in a chat widget.
 Your job is to assist the user with their requests precisely. Be concise and helpful.

@@ -1,5 +1,4 @@
 import type {
-  Attachment,
   ModelInfo,
   ProviderOptions,
   ProviderMessage,
@@ -7,8 +6,9 @@ import type {
   ProviderResponse,
   ProviderResponseChunk,
   ToolDefinition,
-  ToolCallRequest,
-} from "../types/index.js";
+} from "../types/aura-config.js";
+import type { Attachment, ToolCallRequest } from "../types/core-types.js";
+import { MessageRole } from "../types/core-types.js";
 import { BaseProvider } from "./base-provider.js";
 
 export type CopilotLoginStatus =
@@ -197,7 +197,7 @@ function toCopilotMessages(messages: ProviderMessage[]): Array<Record<string, un
 
     // If a user message has attachments, convert to multi-part content
     const hasAttachments =
-      message.role === "user" &&
+      message.role === MessageRole.User &&
       message.attachments &&
       message.attachments.length > 0;
 

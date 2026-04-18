@@ -5,7 +5,7 @@ import type {
   ProviderRequest,
   ProviderResponse,
   ProviderResponseChunk,
-} from "../types/index.js";
+} from "../types/aura-config.js";
 import { createProviders } from "../providers/index.js";
 
 export class ProviderManager {

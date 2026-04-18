@@ -1,4 +1,5 @@
-import type { Skill, AuraTool, ToolDefinition } from "../types/index.js";
+import type { Skill, AuraTool } from "../types/index.js";
+import type { ToolDefinition } from "../types/aura-config.js";
 
 export class SkillRegistry {
   private skills = new Map<string, Skill>();
