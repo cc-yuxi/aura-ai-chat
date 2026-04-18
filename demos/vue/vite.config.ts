@@ -1,3 +1,4 @@
+import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
@@ -11,6 +12,11 @@ export default defineConfig({
       }
     })
   ],
+  resolve: {
+    alias: {
+      'aura-ai-chat': fileURLToPath(new URL('../../packages/lib/src/index.ts', import.meta.url)),
+    },
+  },
   server: {
     port: 4400,
     strictPort: true,

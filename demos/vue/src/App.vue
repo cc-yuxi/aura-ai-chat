@@ -1,8 +1,45 @@
 <script setup lang="ts">
-const handleAuraEvent = (e: Event) => {
-  const customEvent = e as CustomEvent;
-  console.log('Vue caught event:', customEvent.detail);
-}
+import { onMounted, ref } from 'vue';
+import type { AuraConfig } from 'aura-ai-chat';
+import { createAuraDemoConfig } from '../../shared/create-aura-demo-config';
+
+type AuraChatElement = HTMLElement & { config: AuraConfig };
+
+const dashboardPanels = [
+  {
+    title: 'User Growth',
+    metric: '+14.8% month over month',
+    detail: 'Retention cohorts improved after the onboarding refresh landed.',
+  },
+  {
+    title: 'Revenue',
+    metric: '$982K pipeline influenced',
+    detail: 'Mid-market upsell velocity is improving faster than expected.',
+  },
+  {
+    title: 'Traffic Sources',
+    metric: 'Organic leads up 22%',
+    detail: 'Search is outperforming paid while referral quality remains steady.',
+  },
+];
+
+const chatWidget = ref<AuraChatElement | null>(null);
+
+onMounted(() => {
+  if (!chatWidget.value) {
+    return;
+  }
+
+  chatWidget.value.config = createAuraDemoConfig({
+    appId: 'vue-demo',
+    framework: 'Vue',
+    dashboardTitle: 'Aura Analytics',
+    panels: dashboardPanels,
+    onAuraEvent: (event) => {
+      console.log('Vue demo Aura event:', event.type, event.payload);
+    },
+  });
+});
 </script>
 
 <template>
@@ -19,22 +56,17 @@ const handleAuraEvent = (e: Event) => {
     <div class="workspace-split">
       <main class="canvas">
         <div class="panel-grid">
-          <div class="panel-card">
-            <div class="panel-header">User Growth</div>
-            <div class="panel-content">Mock Line Chart</div>
-          </div>
-          <div class="panel-card">
-            <div class="panel-header">Revenue</div>
-            <div class="panel-content">Mock Bar Chart</div>
-          </div>
-          <div class="panel-card">
-            <div class="panel-header">Traffic Sources</div>
-            <div class="panel-content">Mock Pie Chart</div>
+          <div v-for="panel in dashboardPanels" :key="panel.title" class="panel-card">
+            <div class="panel-header">{{ panel.title }}</div>
+            <div class="panel-content">
+              <div class="panel-metric">{{ panel.metric }}</div>
+              <div class="panel-detail">{{ panel.detail }}</div>
+            </div>
           </div>
         </div>
       </main>
       <aside class="assistant-sidebar">
-        <aura-chat @auraEvent="handleAuraEvent"></aura-chat>
+        <aura-chat ref="chatWidget"></aura-chat>
       </aside>
     </div>
   </div>
@@ -134,12 +166,26 @@ body {
 }
 .panel-content {
   flex: 1;
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.45rem;
   color: #8c98a4;
   font-size: 0.9rem;
   background: #f8f9fa;
   border-radius: 8px;
   border: 1px dashed #d8e2ea;
+  padding: 1rem;
+}
+.panel-metric {
+  font-size: 1.55rem;
+  font-weight: 700;
+  color: #17324a;
+}
+.panel-detail {
+  line-height: 1.45;
+}
+.assistant-sidebar > * {
+  flex: 1;
 }
 </style>

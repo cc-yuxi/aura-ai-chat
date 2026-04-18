@@ -1,17 +1,21 @@
 import { Injectable } from '@angular/core';
 import { BaseProvider } from 'aura-ai-chat';
-import type {
-  ModelInfo,
-  ProviderMessage,
-  ProviderOptions,
-  ProviderRequest,
-  ProviderResponse,
-  ProviderResponseChunk,
-  ToolCallRequest,
-  ToolDefinition,
-} from 'aura-ai-chat';
+import type { ProviderOptions } from 'aura-ai-chat';
 import type { DataSourceId, PanelConfig, PanelType } from '../../core/models/panel.model';
 import { readString } from '../tools/tool-utils';
+
+type ProviderRequest = Parameters<BaseProvider['chat']>[0];
+type ProviderResponse = Awaited<ReturnType<BaseProvider['chat']>>;
+type ProviderResponseChunk = BaseProvider['streamChat'] extends (
+  request: ProviderRequest,
+  options?: ProviderOptions,
+) => AsyncIterable<infer T>
+  ? T
+  : never;
+type ProviderMessage = ProviderRequest['messages'][number];
+type ToolDefinition = NonNullable<ProviderRequest['tools']>[number];
+type ToolCallRequest = ProviderResponse['toolCalls'][number];
+type ModelInfo = Awaited<ReturnType<BaseProvider['getModels']>>[number];
 
 interface WorkflowState {
   intent: 'create' | 'update' | 'delete' | 'list';

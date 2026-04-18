@@ -1160,6 +1160,7 @@ function buildWidgetConfig(draft?: Partial<AuraConfig>) {
     const editorConfig = cloneEditorConfig();
     const agentDraft = draft?.agent;
     const {
+        providers: selectedProviders,
         tools: selectedTools,
         skills: selectedSkills,
         ...agentUpdates
@@ -1179,12 +1180,10 @@ function buildWidgetConfig(draft?: Partial<AuraConfig>) {
             ...editorConfig.appearance,
             ...(draft?.appearance ?? {}),
         },
-        providers: draft?.providers?.length
-            ? draft.providers as NonNullable<AuraConfig["providers"]>
-            : editorConfig.providers,
         agent: {
             ...editorConfig.agent,
             ...agentUpdates,
+            providers: selectedProviders ?? editorConfig.agent.providers,
             skills: selectedSkills ?? editorConfig.agent.skills,
             tools: selectedTools ?? editorConfig.agent.tools,
         },

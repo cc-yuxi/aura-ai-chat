@@ -393,7 +393,7 @@ export class CommunicationManager {
     });
 
     const summary = activeSkillNames.length > 0
-      ? `Active skills (${mode}): ${activeSkillNames.join(", ")}`
+      ? `Selected skills (${mode}): ${activeSkillNames.join(", ")}`
       : `Cleared active skills (${mode})`;
     const step = await this.emitStep(iteration, "skill-select", summary);
     await this.completeStep(step);

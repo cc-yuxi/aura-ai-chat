@@ -1,8 +1,14 @@
+import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: {
+      'aura-ai-chat': fileURLToPath(new URL('../../packages/lib/src/index.ts', import.meta.url)),
+    },
+  },
   server: {
     port: 4300,
     strictPort: true,

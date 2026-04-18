@@ -221,7 +221,7 @@ function buildActiveSkillsSection(activeSkills?: Skill[]): string | null {
     })
     .join("\n\n");
 
-  return formatSection("Active Skills", body);
+  return formatSection("Selected Skills", body);
 }
 
 function buildSkillsSection(

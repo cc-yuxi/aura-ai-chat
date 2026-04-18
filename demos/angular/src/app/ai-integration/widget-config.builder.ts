@@ -63,7 +63,7 @@ export class WidgetConfigBuilder {
           },
           {
             type: 'built-in',
-            id: 'github-copilot',
+            id: 'gitHubCopilot',
             config: {
               rememberToken: true,
             },

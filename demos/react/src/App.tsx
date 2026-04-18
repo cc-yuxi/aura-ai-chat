@@ -2,14 +2,40 @@ import React from 'react';
 import 'aura-ai-chat';
 import { createComponent } from '@lit/react';
 import { AuraChat } from 'aura-ai-chat';
+import { createAuraDemoConfig } from '../../shared/create-aura-demo-config';
 
 const AuraChatReact = createComponent({
   tagName: 'aura-chat',
   elementClass: AuraChat,
   react: React,
-  events: {
-    onAuraEvent: 'auraEvent'
-  }
+});
+
+const dashboardPanels = [
+  {
+    title: 'User Growth',
+    metric: '+18.4% month over month',
+    detail: 'Acquisition is accelerating after the spring activation campaign.',
+  },
+  {
+    title: 'Revenue',
+    metric: '$1.28M this quarter',
+    detail: 'Expansion revenue is carrying the strongest contribution.',
+  },
+  {
+    title: 'Traffic Sources',
+    metric: '41% organic, 33% paid, 26% referral',
+    detail: 'Organic traffic is still the healthiest quality channel.',
+  },
+];
+
+const chatConfig = createAuraDemoConfig({
+  appId: 'react-demo',
+  framework: 'React',
+  dashboardTitle: 'Aura Analytics',
+  panels: dashboardPanels,
+  onAuraEvent: (event) => {
+    console.log('React demo Aura event:', event.type, event.payload);
+  },
 });
 
 const styles = `
@@ -103,13 +129,27 @@ const styles = `
   }
   .panel-content {
     flex: 1;
-    display: grid;
-    place-items: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.45rem;
     color: #8c98a4;
     font-size: 0.9rem;
     background: #f8f9fa;
     border-radius: 8px;
     border: 1px dashed #d8e2ea;
+    padding: 1rem;
+  }
+  .panel-metric {
+    font-size: 1.55rem;
+    font-weight: 700;
+    color: #17324a;
+  }
+  .panel-detail {
+    line-height: 1.45;
+  }
+  .assistant-sidebar > * {
+    flex: 1;
   }
 `;
 
@@ -129,24 +169,19 @@ function App() {
       <div className="workspace-split">
         <main className="canvas">
           <div className="panel-grid">
-            <div className="panel-card">
-              <div className="panel-header">User Growth</div>
-              <div className="panel-content">Mock Line Chart</div>
-            </div>
-            <div className="panel-card">
-              <div className="panel-header">Revenue</div>
-              <div className="panel-content">Mock Bar Chart</div>
-            </div>
-            <div className="panel-card">
-              <div className="panel-header">Traffic Sources</div>
-              <div className="panel-content">Mock Pie Chart</div>
-            </div>
+            {dashboardPanels.map((panel) => (
+              <div className="panel-card" key={panel.title}>
+                <div className="panel-header">{panel.title}</div>
+                <div className="panel-content">
+                  <div className="panel-metric">{panel.metric}</div>
+                  <div className="panel-detail">{panel.detail}</div>
+                </div>
+              </div>
+            ))}
           </div>
         </main>
         <aside className="assistant-sidebar">
-          <AuraChatReact
-            onAuraEvent={(e: any) => console.log('React caught event:', e.detail)}
-          />
+          <AuraChatReact config={chatConfig} />
         </aside>
       </div>
     </div>
