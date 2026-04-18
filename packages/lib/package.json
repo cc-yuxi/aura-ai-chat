@@ -1,7 +1,16 @@
 {
   "name": "aura-ai-chat",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Production-grade, framework-agnostic AI chat widget built as a Web Component library",
+  "author": {
+    "name": "Yuxi CHEN",
+    "email": "yuxichn@gmail.com",
+    "url": "https://www.linkedin.com/in/yuxichen/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cc-yuxi/aura-ai-chat.git"
+  },
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
