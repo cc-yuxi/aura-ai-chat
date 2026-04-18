@@ -460,6 +460,8 @@ export class AuraChat extends LitElement {
 
   private renderHeader(): TemplateResult {
     const cfg = this.config;
+    const showSettingsButton = cfg?.appearance?.showSettingsButton ?? true;
+    const showCloseButton = cfg?.appearance?.showCloseButton ?? true;
     return html`
       <div class="header" part="header">
         <div class="header__left">
@@ -492,22 +494,30 @@ export class AuraChat extends LitElement {
           >
             <md-icon>history</md-icon>
           </button>
-          <button
-            class="header__btn"
-            @click=${this.handleOpenSettings}
-            aria-label="Chat settings"
-            title="Chat settings"
-          >
-            <md-icon>settings</md-icon>
-          </button>
-          <button
-            class="header__btn"
-            @click=${this.handleCloseAuraChat}
-            aria-label="Close chat"
-            title="Close chat"
-          >
-            <md-icon>close</md-icon>
-          </button>
+          ${showSettingsButton
+            ? html`
+                <button
+                  class="header__btn"
+                  @click=${this.handleOpenSettings}
+                  aria-label="Chat settings"
+                  title="Chat settings"
+                >
+                  <md-icon>settings</md-icon>
+                </button>
+              `
+            : nothing}
+          ${showCloseButton
+            ? html`
+                <button
+                  class="header__btn"
+                  @click=${this.handleCloseAuraChat}
+                  aria-label="Close chat"
+                  title="Close chat"
+                >
+                  <md-icon>close</md-icon>
+                </button>
+              `
+            : nothing}
         </div>
       </div>
     `;
@@ -604,7 +614,8 @@ export class AuraChat extends LitElement {
       "Ask AI to help with your request..."}
         .disabled=${this.needsCopilotLogin}
         .loading=${isLoading}
-        .enableAttachments=${!!this.config?.appearance?.enableAttachments}
+        .enableAttachments=${this.config?.appearance?.enableAttachments ?? true}
+        .showProviderSelector=${this.config?.appearance?.showProviderSelector ?? true}
         .maxAttachmentSize=${this.config?.appearance?.maxAttachmentSize ??
       10_485_760}
         .allowedAttachmentTypes=${this.config?.appearance

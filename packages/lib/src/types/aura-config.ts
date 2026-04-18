@@ -569,6 +569,12 @@ export interface AuraAppearanceConfig {
   headerTitle?: string;
   /** Icon shown in the chat header. */
   headerIcon?: string;
+  /** Whether to show the settings button in the chat header. Defaults to true. */
+  showSettingsButton?: boolean;
+  /** Whether to show the close button in the chat header. Defaults to true. */
+  showCloseButton?: boolean;
+  /** Whether to show the provider dropdown in the composer. Defaults to true. */
+  showProviderSelector?: boolean;
   /** Title for the initial welcome message. */
   welcomeMessageTitle?: string;
   /** Body of the initial welcome message. */
@@ -583,7 +589,7 @@ export interface AuraAppearanceConfig {
   errorMessage?: string;
   /** Label for the retry button. */
   retryLabel?: string;
-  /** Whether to allow file uploads. */
+  /** Whether to show and allow file uploads in the composer. Defaults to true. */
   enableAttachments?: boolean;
   /** Max file size in bytes. */
   maxAttachmentSize?: number;

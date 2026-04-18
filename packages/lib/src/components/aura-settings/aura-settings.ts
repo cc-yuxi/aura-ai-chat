@@ -243,7 +243,7 @@ export class AuraSettings extends LitElement {
     return this.config?.agent?.enableStreaming ?? true;
   }
   private get _enableAttachments(): boolean {
-    return this.config?.appearance?.enableAttachments ?? false;
+    return this.config?.appearance?.enableAttachments ?? true;
   }
   private get _maxAttachmentSize(): number {
     return this.config?.appearance?.maxAttachmentSize ?? 10_485_760;

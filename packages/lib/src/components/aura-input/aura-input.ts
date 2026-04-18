@@ -40,7 +40,8 @@ export class AuraInput extends LitElement {
     "Ask AI to help with your request...";
   @property({ type: Boolean }) disabled = false;
   @property({ type: Boolean }) loading = false;
-  @property({ type: Boolean }) enableAttachments = false;
+  @property({ type: Boolean }) enableAttachments = true;
+  @property({ type: Boolean }) showProviderSelector = true;
   @property({ type: Number }) maxAttachmentSize = 10_485_760;
   @property({ type: Array }) allowedAttachmentTypes: string[] = [];
   @property({ type: Object }) providerManager: ProviderManager | null = null;
@@ -248,7 +249,8 @@ export class AuraInput extends LitElement {
         </div>
         <div class="bottom-row">
           <div class="bottom-row_left">
-            ${this._renderProviderDropdown()} ${this._renderModelDropdown()}
+            ${this.showProviderSelector ? this._renderProviderDropdown() : nothing}
+            ${this._renderModelDropdown()}
             ${this.enableAttachments
         ? html`<file-attachment
                   .attachments=${this.pendingAttachments}
