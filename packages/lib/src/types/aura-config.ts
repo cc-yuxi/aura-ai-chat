@@ -58,14 +58,10 @@ export interface ProviderMessage {
   content: string;
   /** ID of the tool call this message responds to (camelCase). */
   toolCallId?: string;
-  /** ID of the tool call this message responds to (snake_case, for compatibility). */
-  tool_call_id?: string;
   /** Name of the tool or user (optional). */
   name?: string;
   /** List of tool calls requested by the assistant (camelCase). */
   toolCalls?: ToolCallRequest[];
-  /** List of tool calls requested by the assistant (snake_case, for compatibility). */
-  tool_calls?: ToolCallRequest[];
   /** Attachments associated with the message. */
   attachments?: Attachment[];
 }

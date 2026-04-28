@@ -193,7 +193,7 @@ function buildMultiPartContent(
 
 function toCopilotMessages(messages: ProviderMessage[]): Array<Record<string, unknown>> {
   return messages.map((message) => {
-    const toolCalls = message.tool_calls ?? message.toolCalls;
+    const toolCalls = message.toolCalls;
 
     // If a user message has attachments, convert to multi-part content
     const hasAttachments =
@@ -207,7 +207,7 @@ function toCopilotMessages(messages: ProviderMessage[]): Array<Record<string, un
         ? buildMultiPartContent(message.content, message.attachments!)
         : message.content,
       name: message.name,
-      tool_call_id: message.tool_call_id ?? message.toolCallId,
+      tool_call_id: message.toolCallId,
       tool_calls: toolCalls?.map((toolCall) => ({
         id: toolCall.callId,
         type: "function",
