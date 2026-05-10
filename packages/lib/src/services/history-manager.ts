@@ -2,6 +2,7 @@ import type {
   AuraConfig,
   ChatMessage,
   Conversation,
+  FeedbackEvent,
   IConversationManager,
 } from "../types/index.js";
 import { AuraEventType } from "../types/index.js";
@@ -132,6 +133,11 @@ export class HistoryManager {
     if (msg) {
       await this.conversationManager.saveMessage(conv.id, msg);
     }
+  }
+
+  async saveFeedback(feedback: FeedbackEvent): Promise<boolean> {
+    if (!this.conversationManager?.saveFeedback) return false;
+    return this.conversationManager.saveFeedback(feedback);
   }
 
   async addMessage(conversationId: string, msg: ChatMessage): Promise<void> {

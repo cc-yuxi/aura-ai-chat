@@ -125,6 +125,11 @@ npm install aura-ai-chat
       conversation.updatedAt = Date.now();
       memory.set(id, conversation);
     },
+
+    async saveFeedback(feedback) {
+      console.log("Message feedback", feedback);
+      return true;
+    },
   };
 
   const orderLookupTool = {
@@ -170,6 +175,7 @@ npm install aura-ai-chat
       welcomeMessageTitle: "Need help?",
       welcomeMessage: "Ask about orders, approvals, or operational follow-up.",
       inputPlaceholder: "Message Aster...",
+      feedbackMode: "hover",
       suggestedPrompts: [
         {
           title: "Check an order",
@@ -191,6 +197,9 @@ npm install aura-ai-chat
       appSystemPrompt: "You are a helpful operations assistant.",
       tools: [orderLookupTool],
       conversationManager,
+      feedback: {
+        reasonTags: ["Incorrect", "Incomplete", "Not helpful"],
+      },
       enableStreaming: true,
       maxContextTokens: 4096,
       maxIterations: 8,
@@ -253,6 +262,7 @@ interface AuraAppearanceConfig {
   errorMessage?: string;
   retryLabel?: string;
   enableAttachments?: boolean;
+  feedbackMode?: "always" | "hover";
   maxAttachmentSize?: number;
   allowedAttachmentTypes?: string[];
   theme?: "light" | "dark" | "professional-light" | "auto";
@@ -275,6 +285,7 @@ interface AuraAgentConfig {
   tools?: AuraTool[];
   mcpServers?: McpServerConfig[];
   conversationManager?: IConversationManager;
+  feedback?: AuraFeedbackConfig;
   conversationId?: string;
   maxContextTokens?: number;
   enableStreaming?: boolean;
@@ -283,6 +294,33 @@ interface AuraAgentConfig {
   toolTimeout?: number;
   confirmationTimeoutMs?: number;
   enableWebMcp?: boolean;
+}
+```
+
+### Feedback
+
+Add `agent.feedback` and set `appearance.feedbackMode` to show message feedback controls. Positive feedback submits immediately; negative feedback opens a small form with host-provided reason tags and an optional comment.
+
+```ts
+interface AuraFeedbackConfig {
+  reasonTags?: Array<string | { id: string; label: string }>;
+  reasonLabel?: string;
+  commentPlaceholder?: string;
+}
+
+interface FeedbackEvent {
+  id: string;
+  conversationId: string;
+  messageId: string;
+  messageRole: "user" | "assistant" | "system" | "tool";
+  rating: "positive" | "negative";
+  reasonIds?: string[];
+  comment?: string;
+  timestamp: number;
+}
+
+interface IConversationManager {
+  saveFeedback?(feedback: FeedbackEvent): Promise<boolean>;
 }
 ```
 
@@ -361,6 +399,10 @@ Key widget events include:
 
 - `message-sent`
 - `message-received`
+- `message-feedback-opened`
+- `message-feedback-cancelled`
+- `message-feedback-submitted`
+- `message-copied`
 - `tool-start`
 - `tool-success`
 - `tool-error`

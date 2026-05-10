@@ -10,6 +10,7 @@ import { customElement, property, state, query } from "lit/decorators.js";
 import type {
   AuraConfig,
   ChatMessage,
+  FeedbackEvent,
   SuggestedPrompt,
   Attachment,
   AIProvider,
@@ -590,6 +591,9 @@ export class AuraChat extends LitElement {
             .message=${m}
             .aiIcon=${this.activeProviderIcon}
             .aiName=${this.config?.identity?.aiName ?? "AI Assistant"}
+            .conversationId=${this.historyManager?.getCurrentConversation()?.id ?? ""}
+            .feedbackConfig=${this.config?.agent?.feedback}
+            .feedbackMode=${this.config?.appearance?.feedbackMode}
             .agentSteps=${m.metadata && m.metadata["isIteration"]
             ? (m.metadata["agentSteps"] as AgentStep[]).filter(
               (s) => s.iteration === m.metadata?.["iterationNumber"],
@@ -599,6 +603,10 @@ export class AuraChat extends LitElement {
             @reject-action=${this.handleStepRejected}
             @user-input-submitted=${this.handleUserInputSubmitted}
             @retry=${this.handleRetry}
+            @message-feedback-opened=${this.handleMessageFeedbackOpened}
+            @message-feedback-cancelled=${this.handleMessageFeedbackCancelled}
+            @message-feedback=${this.handleMessageFeedback}
+            @message-copied=${this.handleMessageCopied}
             part="aura-messages"
           ></aura-messages>
         `,
@@ -831,6 +839,51 @@ export class AuraChat extends LitElement {
     const resolve = this.pendingHumanInTheLoop.resolve;
     this.pendingHumanInTheLoop = null;
     resolve({ text: e.detail.text });
+  }
+
+  private async handleMessageFeedback(e: CustomEvent<FeedbackEvent>): Promise<void> {
+    e.stopPropagation();
+    try {
+      const saved = await this.historyManager?.saveFeedback(e.detail);
+      this.historyManager?.replaceMessage(e.detail.messageId, {
+        metadata: {
+          ...(this.messages.find((message) => message.id === e.detail.messageId)
+            ?.metadata ?? {}),
+          feedbackId: e.detail.id,
+          feedbackRating: e.detail.rating,
+          feedbackUpdatedAt: e.detail.timestamp,
+        },
+      });
+      await this.historyManager?.persistExistingMessage(e.detail.messageId);
+      this.messages = [...(this.historyManager?.getMessages() ?? this.messages)];
+      this.eventBus?.emit(AuraEventType.MessageFeedbackSubmitted, {
+        feedback: e.detail,
+        saved: saved === true,
+      });
+    } catch (error) {
+      const errorObj =
+        error instanceof Error
+          ? { message: error.message, stack: error.stack }
+          : { message: String(error) };
+      this.eventBus?.emit(AuraEventType.Error, { error: errorObj });
+    }
+  }
+
+  private handleMessageFeedbackOpened(e: CustomEvent<Record<string, unknown>>): void {
+    e.stopPropagation();
+    this.eventBus?.emit(AuraEventType.MessageFeedbackOpened, e.detail);
+  }
+
+  private handleMessageFeedbackCancelled(
+    e: CustomEvent<Record<string, unknown>>,
+  ): void {
+    e.stopPropagation();
+    this.eventBus?.emit(AuraEventType.MessageFeedbackCancelled, e.detail);
+  }
+
+  private handleMessageCopied(e: CustomEvent<Record<string, unknown>>): void {
+    e.stopPropagation();
+    this.eventBus?.emit(AuraEventType.MessageCopied, e.detail);
   }
 
   private startConfirmationTimeout(

@@ -53,6 +53,7 @@ export class WidgetConfigBuilder {
         inputPlaceholder: 'Ask Dash to build or refine your dashboard...',
         suggestedPrompts: this.suggestedPrompts,
         theme: this.getAuraTheme(),
+        feedbackMode: 'hover',
       },
       agent: {
         providers: [
@@ -74,6 +75,16 @@ export class WidgetConfigBuilder {
         skills: [dashboardBuilderSkill],
         tools: this.toolRegistry.getAll(),
         conversationManager: this.conversationService.getManager(),
+        feedback: {
+          reasonTags: [
+            { id: 'incorrect-dashboard-state', label: 'Incorrect state' },
+            { id: 'missed-intent', label: 'Missed intent' },
+            { id: 'unclear', label: 'Unclear' },
+            { id: 'not-actionable', label: 'Not actionable' },
+          ],
+          reasonLabel: 'What should Dash improve?',
+          commentPlaceholder: 'Add detail for the demo feedback log',
+        },
         enableStreaming: true,
         maxContextTokens: 4096,
         maxIterations: 8,

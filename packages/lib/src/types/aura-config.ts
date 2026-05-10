@@ -433,6 +433,52 @@ export interface Skill {
 }
 
 /**
+ * A selectable reason tag shown in the negative feedback form.
+ */
+export type FeedbackReasonTag =
+  | string
+  | {
+      /** Stable ID saved with the feedback event. */
+      id: string;
+      /** User-facing tag label. */
+      label: string;
+    };
+
+/**
+ * Configuration for message feedback controls.
+ */
+export interface AuraFeedbackConfig {
+  /** Catalogue of tags users can choose from for negative feedback. */
+  reasonTags?: FeedbackReasonTag[];
+  /** Label shown above the negative feedback reason tags. */
+  reasonLabel?: string;
+  /** Placeholder for the optional detailed comment. */
+  commentPlaceholder?: string;
+}
+
+/**
+ * Feedback submitted for one message in a conversation.
+ */
+export interface FeedbackEvent {
+  /** Unique ID for this feedback submission. */
+  id: string;
+  /** Conversation that contains the message. */
+  conversationId: string;
+  /** Message being rated. */
+  messageId: string;
+  /** Message role at the time of feedback. */
+  messageRole: MessageRoleType;
+  /** Positive or negative message rating. */
+  rating: "positive" | "negative";
+  /** Selected reason tag IDs for negative feedback. */
+  reasonIds?: string[];
+  /** Optional free-form user comment. */
+  comment?: string;
+  /** When the feedback was submitted. */
+  timestamp: number;
+}
+
+/**
  * Types of events emitted by the Aura system.
  */
 export enum AuraEventType {
@@ -443,6 +489,10 @@ export enum AuraEventType {
   HistoryCleared = "history-cleared",
   MessageSent = "message-sent",
   MessageReceived = "message-received",
+  MessageFeedbackOpened = "message-feedback-opened",
+  MessageFeedbackCancelled = "message-feedback-cancelled",
+  MessageFeedbackSubmitted = "message-feedback-submitted",
+  MessageCopied = "message-copied",
   ToolCalled = "tool-called",
   ToolStart = "tool-start",
   ToolSuccess = "tool-success",
@@ -525,6 +575,8 @@ export interface AuraAgentConfig {
   mcpServers?: McpServerConfig[];
   /** Implementation for conversation storage. */
   conversationManager?: IConversationManager;
+  /** Message feedback feature configuration. */
+  feedback?: AuraFeedbackConfig;
   /** Pre-defined conversation ID to load. */
   conversationId?: string;
   /** Maximum number of tokens for context window. */
@@ -587,6 +639,8 @@ export interface AuraAppearanceConfig {
   retryLabel?: string;
   /** Whether to show and allow file uploads in the composer. Defaults to true. */
   enableAttachments?: boolean;
+  /** Feedback button visibility. Omit to hide message feedback controls. */
+  feedbackMode?: "always" | "hover";
   /** Max file size in bytes. */
   maxAttachmentSize?: number;
   /** Allowed MIME types for uploads. */
@@ -632,6 +686,8 @@ export interface IConversationManager {
     conversationId: string,
     message: ChatMessage,
   ): Promise<void> | Promise<unknown>;
+  /** Save feedback for a message in a conversation. */
+  saveFeedback?(feedback: FeedbackEvent): Promise<boolean>;
   /** Delete a conversation. */
   deleteConversation?(conversationId: string): Promise<void>;
   /** Clear all conversation history. */

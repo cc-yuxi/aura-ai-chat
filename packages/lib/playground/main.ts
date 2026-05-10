@@ -6,6 +6,7 @@ import type {
     AuraTool,
     ChatMessage,
     Conversation,
+    FeedbackEvent,
     IConversationManager,
     ProviderConfig,
     Skill,
@@ -23,6 +24,7 @@ type DemoConfig = AuraConfig & {
 };
 
 const conversations = new Map<string, Conversation>();
+const feedbackEvents: FeedbackEvent[] = [];
 
 function makeConversation(id: string = crypto.randomUUID()): Conversation {
     const now = Date.now();
@@ -56,6 +58,11 @@ const conversationManager: IConversationManager = {
             if (firstUser) conv.title = firstUser.content.slice(0, 60);
         }
         conversations.set(conversationId, conv);
+    },
+    async saveFeedback(feedback: FeedbackEvent) {
+        feedbackEvents.push(feedback);
+        console.log("Playground feedback", feedback);
+        return true;
     },
     async deleteConversation(conversationId: string) {
         conversations.delete(conversationId);
@@ -998,6 +1005,7 @@ const defaultConfig: DemoConfig = {
         errorMessage: "The showcase workflow hit an error.",
         retryLabel: "Retry",
         enableAttachments: true,
+        feedbackMode: "hover",
         maxAttachmentSize: 10_485_760,
         suggestedPrompts: [
             {
@@ -1045,6 +1053,16 @@ const defaultConfig: DemoConfig = {
         skills: sampleSkills,
         tools: sampleTools,
         conversationManager,
+        feedback: {
+            reasonTags: [
+                { id: "incorrect-market-data", label: "Incorrect data" },
+                { id: "missed-risk", label: "Missed risk" },
+                { id: "wrong-tool", label: "Wrong tool" },
+                { id: "unclear-answer", label: "Unclear" },
+            ],
+            reasonLabel: "What went wrong with this response?",
+            commentPlaceholder: "Describe what the desk assistant should fix",
+        },
         maxContextTokens: 204096,
         enableStreaming: true,
         maxIterations: 20,

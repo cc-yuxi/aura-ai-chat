@@ -5,6 +5,7 @@ import type {
   Conversation,
   ChatMessage,
   IConversationManager,
+  FeedbackEvent,
   SuggestedPrompt,
 } from "aura-ai-chat";
 
@@ -87,6 +88,11 @@ function createConversationManager(appId: string): IConversationManager {
       }
 
       store.set(conversationId, conversation);
+    },
+
+    async saveFeedback(feedback: FeedbackEvent) {
+      console.log(`[${appId}] Aura feedback`, feedback);
+      return true;
     },
 
     async deleteConversation(conversationId: string) {
@@ -180,6 +186,7 @@ export function createAuraDemoConfig(
       inputPlaceholder: `Ask ${aiName} about this dashboard...`,
       suggestedPrompts: buildSuggestedPrompts(options.framework),
       showCloseButton: false,
+      feedbackMode: "hover",
     },
     agent: {
       providers: [
@@ -210,6 +217,16 @@ export function createAuraDemoConfig(
         ),
       ],
       conversationManager: createConversationManager(options.appId),
+      feedback: {
+        reasonTags: [
+          { id: "incorrect", label: "Incorrect" },
+          { id: "incomplete", label: "Incomplete" },
+          { id: "unclear", label: "Unclear" },
+          { id: "not-actionable", label: "Not actionable" },
+        ],
+        reasonLabel: "What should be improved?",
+        commentPlaceholder: "Add detail for the demo log",
+      },
       enableStreaming: true,
       maxContextTokens: 4096,
       maxIterations: 6,

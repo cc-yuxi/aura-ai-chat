@@ -289,6 +289,13 @@ export class AuraEventMonitorElement extends LitElement {
         return this.toInlineText(
           `[AI] ${this.extractMessageContent(payload["message"])}`,
         );
+      case AuraEventType.MessageFeedbackOpened:
+      case AuraEventType.MessageFeedbackCancelled:
+      case AuraEventType.MessageFeedbackSubmitted:
+      case AuraEventType.MessageCopied:
+        return this.toInlineText(
+          `[Feedback] ${this.formatFeedbackSummary(event.type, payload)}`,
+        );
       case AuraEventType.ConversationStarted:
       case AuraEventType.ConversationEnded:
       case AuraEventType.ConversationDeleted:
@@ -363,6 +370,31 @@ export class AuraEventMonitorElement extends LitElement {
     }
 
     return `skills(${mode})=${skillNames.join(", ")}`;
+  }
+
+  private formatFeedbackSummary(
+    type: AuraEventType,
+    payload: Record<string, unknown>,
+  ): string {
+    const feedback = payload["feedback"] as Record<string, unknown> | undefined;
+    const source = feedback ?? payload;
+    const messageId = String(source["messageId"] ?? "message");
+    const rating = String(source["rating"] ?? "").trim();
+
+    switch (type) {
+      case AuraEventType.MessageFeedbackOpened:
+        return `negative feedback opened for ${messageId}`;
+      case AuraEventType.MessageFeedbackCancelled:
+        return `negative feedback cancelled for ${messageId}`;
+      case AuraEventType.MessageFeedbackSubmitted: {
+        const saved = payload["saved"] === true ? "saved" : "not saved";
+        return `${rating || "feedback"} submitted for ${messageId} (${saved})`;
+      }
+      case AuraEventType.MessageCopied:
+        return `message copied ${messageId}`;
+      default:
+        return this.stringifyCompact(payload);
+    }
   }
 
   private formatConversationSummary(

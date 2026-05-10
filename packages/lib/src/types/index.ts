@@ -14,6 +14,7 @@ export type {
   AuraIdentityConfig,
   AuraAppearanceConfig,
   AuraAgentConfig,
+  AuraFeedbackConfig,
   AIProvider,
   ProviderConfig,
   BuiltInProviderConfig,
@@ -39,6 +40,8 @@ export type {
   SuggestedPrompt,
   RichContent,
   McpServerConfig,
+  FeedbackEvent,
+  FeedbackReasonTag,
 } from "./aura-config.js";
 
 export { AuraEventType, AuraToolRisk } from "./aura-config.js";

@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import type { ChatMessage, Conversation, IConversationManager } from 'aura-ai-chat';
+import type { ChatMessage, Conversation, FeedbackEvent, IConversationManager } from 'aura-ai-chat';
 
 const STORAGE_KEY = 'angular-host-app:conversations';
+const FEEDBACK_STORAGE_KEY = 'angular-host-app:feedback';
 
 interface StoredConversationRecord {
   id: string;
@@ -75,6 +76,13 @@ export class ConversationService {
         store[conversationId] = updatedConversation;
         this.writeStore(store);
       },
+      saveFeedback: async (feedback: FeedbackEvent): Promise<boolean> => {
+        const feedbackStore = this.readFeedbackStore();
+        feedbackStore.push(feedback);
+        localStorage.setItem(FEEDBACK_STORAGE_KEY, JSON.stringify(feedbackStore));
+        console.log('[angular-demo] Aura feedback', feedback);
+        return true;
+      },
       deleteConversation: async (conversationId: string): Promise<void> => {
         const store = this.readStore();
         delete store[conversationId];
@@ -84,6 +92,20 @@ export class ConversationService {
         localStorage.removeItem(STORAGE_KEY);
       },
     };
+  }
+
+  private readFeedbackStore(): FeedbackEvent[] {
+    const raw = localStorage.getItem(FEEDBACK_STORAGE_KEY);
+    if (!raw) {
+      return [];
+    }
+
+    try {
+      const parsed = JSON.parse(raw) as unknown;
+      return Array.isArray(parsed) ? parsed.filter(this.isFeedbackEvent) : [];
+    } catch {
+      return [];
+    }
   }
 
   private inferTitle(currentTitle: string | undefined, messages: ChatMessage[]): string {
@@ -160,6 +182,10 @@ export class ConversationService {
 
   private isChatMessage(value: unknown): value is ChatMessage {
     return typeof value === 'object' && value !== null && typeof (value as ChatMessage).id === 'string';
+  }
+
+  private isFeedbackEvent(value: unknown): value is FeedbackEvent {
+    return typeof value === 'object' && value !== null && typeof (value as FeedbackEvent).id === 'string';
   }
 
   private toTimestamp(value: unknown, fallback = Date.now()): number {

@@ -24,6 +24,7 @@ export type {
   AuraIdentityConfig,
   AuraAppearanceConfig,
   AuraAgentConfig,
+  AuraFeedbackConfig,
   AppMetadata,
 
   // Provider config — shapes passed into AuraAgentConfig.providers
@@ -57,6 +58,8 @@ export type {
 
   // Conversation storage — implement IConversationManager for AuraAgentConfig.conversationManager
   IConversationManager,
+  FeedbackEvent,
+  FeedbackReasonTag,
   ChatMessage,
   Conversation,
   Attachment,

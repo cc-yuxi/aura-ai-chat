@@ -337,6 +337,13 @@
   color: var(--monitor-ai);
 }
 
+.event-type.event-type--message-feedback-opened,
+.event-type.event-type--message-feedback-cancelled,
+.event-type.event-type--message-feedback-submitted,
+.event-type.event-type--message-copied {
+  color: var(--monitor-info);
+}
+
 .event-type.event-type--tool-called {
   color: var(--monitor-accent);
 }
