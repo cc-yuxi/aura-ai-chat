@@ -40,6 +40,31 @@ export class AuraMessagesElement extends LitElement {
   @state() private copied = false;
   @state() private localFeedbackRating?: FeedbackEvent["rating"];
 
+  override connectedCallback(): void {
+    super.connectedCallback();
+    document.addEventListener("pointerdown", this.handleDocumentPointerDown);
+  }
+
+  override disconnectedCallback(): void {
+    document.removeEventListener("pointerdown", this.handleDocumentPointerDown);
+    super.disconnectedCallback();
+  }
+
+  private readonly handleDocumentPointerDown = (event: PointerEvent): void => {
+    if (!this.feedbackOpen) return;
+
+    const clickedFeedbackUi = event.composedPath().some((target) => {
+      return (
+        target instanceof Element &&
+        (target.classList.contains("feedback-controls") ||
+          target.classList.contains("feedback-popover"))
+      );
+    });
+    if (clickedFeedbackUi) return;
+
+    this.closeNegativeFeedback();
+  };
+
   private handleRetryClick(): void {
     this.dispatchEvent(
       new CustomEvent("retry", {
